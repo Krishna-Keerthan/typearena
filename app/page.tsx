@@ -1,12 +1,12 @@
 "use client";
 import React, { useState } from 'react';
-import { Zap, Users, BarChart3, Settings, Minimize2, Trophy, User } from 'lucide-react';
+import { Zap, Keyboard, Users, BarChart3, Settings, Minimize2, Trophy, User } from 'lucide-react';
 
 export default function TypeFast() {
   const [activeTab, setActiveTab] = useState('Type');
 
   const navigationItems = [
-    { name: 'Type', icon: '⌨️', active: true },
+    { name: 'Type', icon: <Keyboard/>, active: true },
     { name: 'Multiplayer', icon: <Users/>, active: false },
     { name: 'Leaderboard', icon: <Trophy/>, active: false },
     { name: 'Profile', icon: <User/>, active: false }
@@ -189,29 +189,6 @@ export default function TypeFast() {
           </div>
         </div>
       </main>
-
-
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700;800&display=swap');
-        
-        * {
-          font-family: 'Geist Mono', monospace;
-        }
-        
-        body {
-          margin: 0;
-          padding: 0;
-          overflow-x: hidden;
-        }
-        
-        .hover\\:scale-105:hover {
-          transform: scale(1.05);
-        }
-        
-        .transition-all {
-          transition: all 0.3s ease;
-        }
-      `}</style>
     </div>
   );
 }
