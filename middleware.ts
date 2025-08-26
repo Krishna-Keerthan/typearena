@@ -1,16 +1,22 @@
-
 import { withAuth } from "next-auth/middleware"
 
 export default withAuth(
-
-    // `withAuth` augments your `Request` with the user's token.
-    function middleware(req) {
+  function middleware(req) {
     console.log(req.nextauth.token)
+  },
+  {
+    pages:{
+      signIn: "/auth", // redirect here instead of /api/auth/signin
     },
-    {
     callbacks: {
-    authorized: ({ token }) => token?.role === "admin",
-        },
+      authorized: ({ token }) => !!token, 
     },
+  }
 )
-export const config = { matcher: ["/admin"] }
+
+// Apply middleware to all routes *except* "/", "/auth", and static files
+export const config = {
+  matcher: [
+    "/((?!auth|$|_next|favicon.ico).*)",
+  ],
+}
