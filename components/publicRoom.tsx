@@ -29,7 +29,7 @@ const PublicRoom: React.FC<PublicRoomProps> = ({
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6">
+    <div className="bg-card border  shadow-[inset_0_0_2px_rgba(255,255,255,0.05)]  rounded-lg p-6">
       <div className="flex items-center space-x-2 mb-6">
         <span className="text-purple-400 text-xl">#</span>
         <h3 className="text-white text-lg font-medium">Public Room</h3>
@@ -44,7 +44,7 @@ const PublicRoom: React.FC<PublicRoomProps> = ({
           {rooms.map((room) => (
             <div
               key={room.id}
-              className="bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-600 transition-colors duration-200"
+              className="bg-gray-900 rounded-lg p-4 flex items-center justify-between hover:bg-gray-800 transition-colors duration-200"
             >
               <div className="flex items-center space-x-4">
                 <div className="flex flex-col">

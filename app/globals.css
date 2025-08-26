@@ -12,6 +12,7 @@
   --textMuted: #8892b0;
   --textDark: #64748b;
   --accent: #22d3ee;
+  --secBackground: #1a1a1a;
 }
 
 /* Utility classes using @apply */
