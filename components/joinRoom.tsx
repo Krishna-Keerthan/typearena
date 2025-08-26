@@ -22,7 +22,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoinRoom }) => {
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+    <div className="bg-card rounded-lg p-6 space-y-4 border shadow-[inset_0_0_2px_rgba(255,255,255,0.05)]">
       <div className="flex items-center space-x-2 mb-4">
         <span className="text-cyan-400 text-xl">→</span>
         <h3 className="text-white text-lg font-medium">Join Room</h3>
@@ -34,14 +34,14 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoinRoom }) => {
           value={roomCode}
           onChange={(e) => setRoomCode(e.target.value)}
           onKeyPress={handleKeyPress}
-          className="w-full bg-gray-700 text-white px-4 py-3 rounded-md border border-gray-600 focus:border-cyan-400 focus:outline-none"
+          className="w-full bg-gray-900 text-white px-4 py-3 rounded-md border focus:border-cyan-400  focus:outline-none"
           placeholder="Room Code"
         />
         
         <button 
           onClick={handleJoinRoom}
           disabled={!roomCode.trim()}
-          className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium transition-colors duration-200"
+          className="w-full bg-cyan-400 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium transition-colors duration-200"
         >
           → Join Room
         </button>
