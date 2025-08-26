@@ -1,17 +1,7 @@
 "use client";
-import React, { useState } from 'react';
-import { Zap, Users, BarChart3, Settings, Minimize2, Trophy, User } from 'lucide-react';
-
-export default function TypeFast() {
-  const [activeTab, setActiveTab] = useState('Type');
-
-  const navigationItems = [
-    { name: 'Type', icon: '⌨️', active: true },
-    { name: 'Multiplayer', icon: <Users/>, active: false },
-    { name: 'Leaderboard', icon: <Trophy/>, active: false },
-    { name: 'Profile', icon: <User/>, active: false }
-  ];
-
+import React from 'react';
+import { Zap, Users, BarChart3, Settings, Minimize2} from 'lucide-react';
+import Header from '@/components/header';
   const features = [
     {
       icon: <Zap className="w-8 h-8 text-[var(--primary)]" />,
@@ -45,43 +35,13 @@ export default function TypeFast() {
     }
   ];
 
+ export default function Page() {
   return (
-    <div className="min-h-screen w-full bg-background">
-      {/* Header Navigation */}
-      <header className="w-full py-4 px-6">
-        <nav className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded flex items-center justify-center bg-[var(--primary)]">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-[var(--text)]">
-              TypeFast
-            </span>
-          </div>
-
-          {/* Navigation Items */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navigationItems.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => setActiveTab(item.name)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === item.name 
-                    ? 'opacity-100 text-[var(--primary)]' 
-                    : 'opacity-60 hover:opacity-80 text-[var(--textMuted)]'
-                }`}
-              >
-                <span>{item.icon}</span>
-                <span className="font-medium">{item.name}</span>
-              </button>
-            ))}
-          </div>
-        </nav>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-12">
+        <div className="min-h-screen w-full bg-background">
+         
+         {/* Main Content */}
+          <Header />
+        <main className="max-w-6xl mx-auto px-6 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight text-[var(--text)]">
@@ -189,29 +149,7 @@ export default function TypeFast() {
           </div>
         </div>
       </main>
-
-
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700;800&display=swap');
-        
-        * {
-          font-family: 'Geist Mono', monospace;
+      </div>
+  
+          );
         }
-        
-        body {
-          margin: 0;
-          padding: 0;
-          overflow-x: hidden;
-        }
-        
-        .hover\\:scale-105:hover {
-          transform: scale(1.05);
-        }
-        
-        .transition-all {
-          transition: all 0.3s ease;
-        }
-      `}</style>
-    </div>
-  );
-}
