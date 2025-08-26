@@ -40,7 +40,7 @@ import Header from '@/components/header';
         <div className="min-h-screen w-full bg-background">
          
          {/* Main Content */}
-          <Header />
+          
         <main className="max-w-6xl mx-auto px-6 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
