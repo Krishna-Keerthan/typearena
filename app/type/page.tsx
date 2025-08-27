@@ -1,15 +1,14 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react';
-import Panel, { Preferences, Difficulty, Mode } from '@/components/panel';
+import Panel, { Preferences, Difficulty } from '@/components/panel';
 import TypeArea, { wordLists } from '@/components/type-area';
 import Board from '@/components/board';
 
 const TypingTest: React.FC = () => {
-  // Preferences state
+  // Preferences state (removed mode)
   const [preferences, setPreferences] = useState<Preferences>({
     time: 30,
     words: 25,
-    mode: 'time',
     difficulty: 'medium'
   });
 
@@ -32,7 +31,7 @@ const TypingTest: React.FC = () => {
   // Generate text based on current preferences
   const generateText = (): string => {
     const words = wordLists[preferences.difficulty];
-    const wordCount = preferences.mode === 'words' ? preferences.words : 50;
+    const wordCount = preferences.words;
     const shuffled = [...words].sort(() => Math.random() - 0.5);
     const selectedWords: string[] = [];
     
@@ -72,18 +71,16 @@ const TypingTest: React.FC = () => {
       setIsActive(true);
       startTimeRef.current = Date.now();
       
-      // Start timer only for time mode
-      if (preferences.mode === 'time') {
-        intervalRef.current = setInterval(() => {
-          setTimeLeft(prev => {
-            if (prev <= 1) {
-              finishTest();
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      }
+      // Start timer - always use time mode now
+      intervalRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            finishTest();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
   };
 
@@ -133,8 +130,8 @@ const TypingTest: React.FC = () => {
       setCurrentCharIndex(0);
       setUserInput('');
       
-      // Check if test should finish (words mode)
-      if (preferences.mode === 'words' && wordsCompleted + 1 >= preferences.words) {
+      // Check if all words are completed
+      if (wordsCompleted + 1 >= preferences.words) {
         finishTest();
         return;
       }
@@ -187,7 +184,9 @@ const TypingTest: React.FC = () => {
           preferences={preferences}
           onPreferenceChange={handlePreferenceChange}
           onReset={initializeTest}
+          onTryAgain={initializeTest}
           isActive={isActive}
+          isFinished={isFinished}
         />
 
         {/* Type Area */}
@@ -212,7 +211,6 @@ const TypingTest: React.FC = () => {
           isActive={isActive}
           isFinished={isFinished}
           startTime={startTimeRef.current}
-          onTryAgain={initializeTest}
         />
       </div>
     </div>

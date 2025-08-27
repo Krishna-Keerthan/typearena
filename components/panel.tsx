@@ -1,13 +1,11 @@
 import React from 'react';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, RefreshCw } from 'lucide-react';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
-export type Mode = 'time' | 'words';
 
 export interface Preferences {
   time: number;
   words: number;
-  mode: Mode;
   difficulty: Difficulty;
 }
 
@@ -15,14 +13,18 @@ interface PanelProps {
   preferences: Preferences;
   onPreferenceChange: (key: keyof Preferences, value: string | number) => void;
   onReset: () => void;
+  onTryAgain: () => void;
   isActive: boolean;
+  isFinished: boolean;
 }
 
 const Panel: React.FC<PanelProps> = ({ 
   preferences, 
   onPreferenceChange, 
   onReset, 
-  isActive 
+  onTryAgain,
+  isActive,
+  isFinished 
 }) => {
   const handlePreferenceChange = (key: keyof Preferences, value: string | number) => {
     if (!isActive) {
@@ -50,27 +52,6 @@ const Panel: React.FC<PanelProps> = ({
                 } ${isActive ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 {time}s
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Mode Section */}
-        <div className="flex items-center gap-3">
-          <span className="text-gray-300 font-medium text-sm">Mode</span>
-          <div className="flex gap-1 p-1 bg-gray-800 rounded-md border border-gray-600">
-            {(['time', 'words'] as Mode[]).map(mode => (
-              <button
-                key={mode}
-                onClick={() => handlePreferenceChange('mode', mode)}
-                disabled={isActive}
-                className={`px-4 py-1.5 rounded text-xs font-medium transition-all duration-200 capitalize ${
-                  preferences.mode === mode
-                    ? 'bg-[#00d9b7] text-black shadow-sm'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                } ${isActive ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-              >
-                {mode}
               </button>
             ))}
           </div>
@@ -119,8 +100,8 @@ const Panel: React.FC<PanelProps> = ({
         </div>
       </div>
 
-      {/* Reset Button */}
-      <div className="flex justify-center">
+      {/* Action Buttons */}
+      <div className="flex justify-center gap-4">
         <button
           onClick={onReset}
           className="flex items-center gap-2 px-6 py-2 bg-gray-800 rounded-md hover:bg-gray-700 transition-all duration-200 font-medium text-white text-sm border border-gray-600 hover:border-gray-500 transform hover:scale-105"
@@ -128,6 +109,16 @@ const Panel: React.FC<PanelProps> = ({
           <RotateCcw size={16} />
           Reset Test
         </button>
+
+        {isFinished && (
+          <button
+            onClick={onTryAgain}
+            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-[#00d9b7] to-[#00c4a7] text-black rounded-md hover:from-[#00c4a7] hover:to-[#00b399] transition-all duration-200 font-medium text-sm transform hover:scale-105 shadow-md"
+          >
+            <RefreshCw size={16} />
+            Try Again
+          </button>
+        )}
       </div>
     </div>
   );

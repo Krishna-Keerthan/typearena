@@ -10,7 +10,6 @@ interface BoardProps {
   isActive: boolean;
   isFinished: boolean;
   startTime: number;
-  onTryAgain: () => void;
 }
 
 const Board: React.FC<BoardProps> = ({
@@ -21,35 +20,33 @@ const Board: React.FC<BoardProps> = ({
   totalChars,
   isActive,
   isFinished,
-  startTime,
-  onTryAgain
+  startTime
 }) => {
   // Calculate precise WPM and accuracy
   const calculateStats = () => {
     let timeElapsed: number;
     
-    if (preferences.mode === 'time') {
-      // For time mode, calculate based on elapsed time
-      timeElapsed = (preferences.time - timeLeft) / 60;
+    // Calculate based on elapsed time from start
+    if (isFinished && startTime > 0) {
+      timeElapsed = (Date.now() - startTime) / 60000; // Convert to minutes
+    } else if (isActive && startTime > 0) {
+      timeElapsed = (Date.now() - startTime) / 60000;
     } else {
-      // For words mode, calculate based on actual time taken
-      if (isFinished && startTime > 0) {
-        timeElapsed = (Date.now() - startTime) / 60000; // Convert to minutes
-      } else if (isActive && startTime > 0) {
-        timeElapsed = (Date.now() - startTime) / 60000;
-      } else {
-        timeElapsed = 0;
-      }
+      // Use time elapsed from timer for more precision
+      timeElapsed = (preferences.time - timeLeft) / 60;
     }
     
+    // Ensure minimum time for calculations
+    if (timeElapsed < 0.01) timeElapsed = 0.01;
+    
     // Calculate WPM (Words Per Minute)
-    const wpm = timeElapsed > 0 ? Math.round(wordsCompleted / timeElapsed) : 0;
+    const wpm = Math.round(wordsCompleted / timeElapsed);
     
     // Calculate accuracy percentage
     const accuracy = totalChars > 0 ? Math.round(((totalChars - errors) / totalChars) * 100) : 100;
     
     // Calculate net WPM (accounting for errors)
-    const netWpm = timeElapsed > 0 ? Math.round((wordsCompleted - errors) / timeElapsed) : 0;
+    const netWpm = Math.round((wordsCompleted - errors) / timeElapsed);
     
     return { 
       wpm: Math.max(0, wpm), 
@@ -61,13 +58,9 @@ const Board: React.FC<BoardProps> = ({
 
   const { wpm, accuracy, netWpm } = calculateStats();
 
-  // Get time display based on mode
+  // Get time display - always show countdown
   const getTimeDisplay = (): string => {
-    if (preferences.mode === 'time') {
-      return `${timeLeft}s`;
-    } else {
-      return '--';
-    }
+    return `${timeLeft}s`;
   };
 
   // Get performance level and color
@@ -109,6 +102,15 @@ const Board: React.FC<BoardProps> = ({
               'text-red-400'
             }`}>
               {accuracy}%
+            </span>
+          </div>
+          
+          <div className="w-px h-4 bg-gray-700" />
+          
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400 text-xs font-medium uppercase">Words</span>
+            <span className="text-white font-bold text-lg tabular-nums min-w-[40px] text-center">
+              {wordsCompleted}
             </span>
           </div>
           
@@ -241,19 +243,6 @@ const Board: React.FC<BoardProps> = ({
                 <span>Try different difficulty levels to improve</span>
               </div>
             </div>
-          </div>
-
-          {/* Try Again Button - Enhanced */}
-          <div className="text-center">
-            <button
-              onClick={onTryAgain}
-              className="group px-8 py-4 bg-gradient-to-r from-[#00d9b7] to-[#00c4a7] text-black font-bold rounded-lg hover:from-[#00c4a7] hover:to-[#00b399] transition-all duration-200 transform hover:scale-105 text-lg shadow-lg shadow-[#00d9b7]/25 hover:shadow-[#00d9b7]/40"
-            >
-              <span className="flex items-center gap-2">
-                Try Again
-                <span className="transform group-hover:translate-x-1 transition-transform duration-200">→</span>
-              </span>
-            </button>
           </div>
         </div>
       )}
