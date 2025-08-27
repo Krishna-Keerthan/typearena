@@ -4,7 +4,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from 'bcrypt'
 import prisma from '@/lib/prisma'
-import GoogleProvider from "next-auth/providers/google";
+import GoogleProvider, { GoogleProfile } from "next-auth/providers/google";
 
 
 export const authOptions: NextAuthOptions = {
@@ -33,7 +33,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error("No user found with this email");
         }
 
-        const isValid = await bcrypt.compare(credentials.password, user.password);
+        const isValid = await bcrypt.compare(credentials.password, user.password || "");
         if (!isValid) {
           throw new Error("Invalid password");
         }
@@ -49,6 +49,40 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
+  async signIn({ user, account, profile }) {
+  if (account?.provider === "google") {
+    const googleProfile = profile as GoogleProfile;
+
+    if (!googleProfile?.email) {
+      throw new Error("Google account is missing an email address.");
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: googleProfile.email },
+    });
+
+    if (!existingUser) {
+      // ✅ create new user
+      await prisma.user.create({
+        data: {
+          name: googleProfile.name ?? "",
+          email: googleProfile.email,
+          imageUrl: googleProfile.picture,
+          password: null, // allow null in schema
+        },
+      });
+    } else if (!existingUser.imageUrl) {
+      // ✅ optionally update image if missing
+      await prisma.user.update({
+        where: { email: googleProfile.email },
+        data: { imageUrl: googleProfile.picture },
+      });
+    }
+  }
+
+  return true;
+},
+
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id ?? "";
