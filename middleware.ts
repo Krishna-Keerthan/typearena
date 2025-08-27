@@ -2,7 +2,8 @@ import { withAuth } from "next-auth/middleware"
 
 export default withAuth(
   function middleware(req) {
-    console.log(req.nextauth.token)
+        console.log("raw token in middleware", req.nextauth.token);
+    console.log("cookies", req.cookies.getAll());
   },
   {
     pages:{

@@ -1,6 +1,6 @@
 // lib/auth.ts
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@/generated/prisma";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from 'bcrypt'
@@ -39,7 +39,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           name: user.name,
           email: user.email,
-          image: user.image,
+          image: user.imageUrl ?? "",
         };
       },
     }),
