@@ -7,7 +7,7 @@ export default function Header() {
   const pathname = usePathname();
 
   const navigationItems = [
-    { name: "Type", href: "/", icon: <Keyboard /> },
+    { name: "Type", href: "/type", icon: <Keyboard /> },
     { name: "Multiplayer", href: "/multiplayer", icon: <Users /> },
     { name: "Leaderboard", href: "/leaderboard", icon: <Trophy /> },
     { name: "Profile", href: "/profile", icon: <User /> },
