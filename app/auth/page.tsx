@@ -52,6 +52,7 @@ export default function TypeFastAuth() {
       const res = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
+        redirect:true,
         callbackUrl: "/type",
       });
 
@@ -187,6 +188,7 @@ export default function TypeFastAuth() {
                   </div>
 
                   {/* Google Sign In */}
+                </div>
                   <Button
                     onClick={() => signIn("google", { callbackUrl: "/type" })}
                     className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
@@ -194,7 +196,6 @@ export default function TypeFastAuth() {
                     <FcGoogle className="w-8 h-8" />
                     Sign in with Google
                   </Button>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
