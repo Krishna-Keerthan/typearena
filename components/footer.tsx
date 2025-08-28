@@ -1,7 +1,31 @@
 import React from 'react';
 import { Github, Twitter, Facebook } from 'lucide-react';
+ import { AnimatedTooltip } from '@/components/ui/animated-tooltip';
 
 const Footer = () => {
+  const people = [
+  {
+    id: 1,
+    name: "Umar Farooq",
+    designation: "Full Stack Developer",
+    image:
+      "https://avatars.githubusercontent.com/u/118684694?v=4",
+  },
+  {
+    id: 2,
+    name: "Madesh",
+    designation: "Full Stack Developer",
+    image:
+      "https://avatars.githubusercontent.com/u/146449523?v=4",
+  },
+  {
+    id: 3,
+    name: "Krishna Keerthan",
+    designation: "Full Stack Developer",
+    image:
+      "https://avatars.githubusercontent.com/u/153193330?v=4",
+  },
+];
   return (
     <footer 
       className="w-full py-12 px-6"
@@ -22,63 +46,17 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 
-              className="text-lg font-semibold mb-4"
-              style={{ color: 'var(--textMuted)' }}
-            >
-              Quick Links
-            </h3>
-            <ul className="space-y-3">
-              <li>
-                <a 
-                  href="#"
-                  className="transition-colors duration-200 hover:opacity-80"
-                  style={{ color: 'var(--text)' }}
-                >
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="#"
-                  className="transition-colors duration-200 hover:opacity-80"
-                  style={{ color: 'var(--text)' }}
-                >
-                  FAQ
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="#"
-                  className="transition-colors duration-200 hover:opacity-80"
-                  style={{ color: 'var(--text)' }}
-                >
-                  Contact
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="#"
-                  className="transition-colors duration-200 hover:opacity-80"
-                  style={{ color: 'var(--text)' }}
-                >
-                  Terms of Service
-                </a>
-              </li>
-            </ul>
-          </div>
+         
 
           {/* Connect With Us */}
           <div>
             <h3 
-              className="text-lg font-semibold mb-4"
-              style={{ color: 'var(--textMuted)' }}
+              className="text-lg font-semibold mb-4 ml-20"
+              style={{ color: 'var(--primary)' }}
             >
               Connect With Us
             </h3>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 ml-22">
               <a 
                 href="#"
                 className="p-2 rounded-lg transition-all duration-200 hover:scale-110"
@@ -110,8 +88,22 @@ const Footer = () => {
                 <Github size={20} />
               </a>
             </div>
+         
           </div>
+            <div className="relative -top-4 flex flex-col items-end mt-3">
+    <h3 
+      className="text-lg font-semibold mb-4"
+      style={{ color: 'var(--primary)' }}
+    >
+      Contributors
+    </h3>
+    <div className="flex justify-end">
+      <AnimatedTooltip items={people} />
+    </div>
+  </div>
         </div>
+ 
+
 
         {/* Bottom Section */}
         <div className="pt-8 border-t border-opacity-20" style={{ borderColor: 'var(--textMuted)' }}>
@@ -123,9 +115,11 @@ const Footer = () => {
               Designed and Developed with{' '}
               <span style={{ color: 'var(--primary)' }}>❤️</span>{' '}
               by{' '}
-              <span style={{ color: 'var(--primary)' }}>Aman</span>{' '}
+              <span style={{ color: 'var(--primary)' }}>Umar</span>
+              ,
+              <span style={{ color: 'var(--primary)' }}>Madesh</span>{' '}
               &{' '}
-              <span style={{ color: 'var(--primary)' }}>Aditya</span>
+              <span style={{ color: 'var(--primary)' }}>Krishna</span>
             </p>
           </div>
         </div>

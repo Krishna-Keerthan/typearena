@@ -35,17 +35,11 @@ export default function RootLayout({
         >
           <Header />
           {children}
+          <Footer />
           <Sonner richColors expand={true} position="bottom-right" />
         </body>
       </AuthProvider>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Header />
-        
-        {children}
-        <Footer />
-      </body>
+   
     </html>
   );
 }
