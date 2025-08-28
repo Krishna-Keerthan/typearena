@@ -82,36 +82,15 @@ const SimpleProfileCard = () => {
          
           
           <div className="flex items-center text-muted">
-            <Calendar className="w-4 h-4 mr-2" />
+            <Calendar className="w-4 h-4 mr-2"/>
             <span>Joined 1/15/2023</span>
           </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-8 mb-6">
           <div className="text-center">
-            <div className="text-2xl font-bold" style={{color: 'var(--primary)'}}>#156</div>
-            <div className="text-sm text-muted">Global Rank</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold" style={{color: 'var(--primary)'}}>15</div>
-            <div className="text-sm text-muted">Level</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold" style={{color: 'var(--primary)'}}>7</div>
-            <div className="text-sm text-muted">Day Streak</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold" style={{color: 'var(--primary)'}}>342</div>
-            <div className="text-sm text-muted">Tests</div>
+            <div className="text-2xl font-bold pr-7" style={{color: 'var(--primary)'}}>#156</div>
+            <div className="text-sm text-muted pr-7">Global Rank</div>
           </div>
         </div>
 
-        {/* Edit Profile Button */}
-        <button className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors" style={{color: 'var(--text)'}}>
-          <Edit2 className="w-4 h-4" />
-          <span>Edit Profile</span>
-        </button>
       </div>
     </div>
   );
