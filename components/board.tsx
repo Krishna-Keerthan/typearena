@@ -222,28 +222,6 @@ const Board: React.FC<BoardProps> = ({
             </div>
           </div>
 
-          {/* Performance Tips */}
-          <div className="bg-gray-800/30 p-6 rounded-lg border border-gray-700 mb-6">
-            <h3 className="text-lg font-semibold text-white mb-3 text-center">Performance Tips</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
-              <div className="flex items-start gap-2">
-                <span className="text-[#00d9b7]">•</span>
-                <span>Maintain {accuracy < 95 ? 'higher accuracy (95%+)' : 'your excellent accuracy'}</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-[#00d9b7]">•</span>
-                <span>{wpm < 40 ? 'Practice daily to increase speed' : 'Great typing speed!'}</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-[#00d9b7]">•</span>
-                <span>Focus on finger placement and posture</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-[#00d9b7]">•</span>
-                <span>Try different difficulty levels to improve</span>
-              </div>
-            </div>
-          </div>
         </div>
       )}
     </div>
