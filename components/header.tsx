@@ -55,12 +55,12 @@ export default function Header() {
           
          {user ? (
             <Button
-              className="cursor-pointer"
+              className="cursor-pointer bg-red-400 hover:bg-red-600 text-white font-semibold py-2 rounded-lg transition-colors"
               onClick={() => signOut()}
               variant="destructive"
               size="sm"
             >
-              <LogOutIcon className="w-5 h-5 mr-1 text-gray-500" />
+              <LogOutIcon className="w-5 h-5 mr-1 text-gray-100" />
               Logout
             </Button>
           ) : (

@@ -186,7 +186,7 @@ export default function TypeFastAuth() {
                     onClick={() => signIn("google", { callbackUrl: "/type" })}
                     className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
                   >
-                    <img src="/google-icon.svg" alt="Google" className="w-5 h-5" />
+                    <img src="/google-icon.png" alt="Google" className="w-5 h-5" />
                     Sign in with Google
                   </Button>
                 </div>
