@@ -12,8 +12,6 @@ import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { signInSchema, signUpSchema } from "@/types/auth";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { FcGoogle } from "react-icons/fc";
 
 type FormErrors = Partial<Record<"name" | "email" | "password", string>>;
 
@@ -52,12 +50,8 @@ export default function TypeFastAuth() {
       const res = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
-        redirect:true,
-        callbackUrl: "/type",
+        redirect: false,
       });
-
-
-      console.log("the result of signIn is", res)
 
       if (res?.status === 200) {
         toast.success("Login Successful");
@@ -93,8 +87,8 @@ export default function TypeFastAuth() {
   };
 
   return (
-    <div className=" mt-10 text-white flex items-center justify-center px-4 bg-background">
-      <div className="bg-gray-900 border border-gray-800 rounded-xl w-[35rem] shadow-sm py-10 px-10">
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl w-[30rem] shadow-sm py-10 px-10">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">Welcome to TypeFast</h1>
           <p className="text-gray-400">
@@ -175,7 +169,7 @@ export default function TypeFastAuth() {
                   {/* Credentials Sign In */}
                   <Button
                     onClick={() => handleSubmit("signin")}
-                    className="w-full px-8 py-4 cursor-pointer rounded-lg font-semibold text-lg transition-all duration-200 hover:scale-105 hover:shadow-lg bg-[var(--primary)] hover:bg-[var(--primaryHover)] text-white"
+                    className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold py-2 rounded-lg transition-colors"
                   >
                     Sign In →
                   </Button>
@@ -188,14 +182,14 @@ export default function TypeFastAuth() {
                   </div>
 
                   {/* Google Sign In */}
-                </div>
                   <Button
                     onClick={() => signIn("google", { callbackUrl: "/type" })}
                     className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
                   >
-                    <FcGoogle className="w-8 h-8" />
+                    <img src="/google-icon.svg" alt="Google" className="w-5 h-5" />
                     Sign in with Google
                   </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -288,7 +282,7 @@ export default function TypeFastAuth() {
 
                   <Button
                     onClick={() => handleSubmit("signup")}
-                    className="w-full px-8 py-4 cursor-pointer rounded-lg font-semibold text-lg transition-all duration-200 hover:scale-105 hover:shadow-lg bg-[var(--primary)] hover:bg-[var(--primaryHover)] text-white"
+                    className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold py-2 rounded-lg transition-colors"
                   >
                     Sign Up →
                   </Button>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Header from "@/components/header";
-import Footer from "@/components/footer";
 import "./globals.css";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import AuthProvider from "@/context/authProvider";
@@ -35,11 +34,9 @@ export default function RootLayout({
         >
           <Header />
           {children}
-          <Footer />
           <Sonner richColors expand={true} position="bottom-right" />
         </body>
       </AuthProvider>
-   
     </html>
   );
 }

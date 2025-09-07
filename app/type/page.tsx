@@ -1,12 +1,11 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react';
-import Panel, { Preferences } from '@/components/panel';
+import Panel, { Preferences, Difficulty } from '@/components/panel';
 import TypeArea, { wordLists } from '@/components/type-area';
-import LiveStats from '@/components/board';
-import DetailedStats from '@/components/stats';
+import Board from '@/components/board';
 
 const TypingTest: React.FC = () => {
-  // Preferences state
+  // Preferences state (removed mode)
   const [preferences, setPreferences] = useState<Preferences>({
     time: 30,
     words: 25,
@@ -24,13 +23,10 @@ const TypingTest: React.FC = () => {
   const [isFinished, setIsFinished] = useState<boolean>(false);
   const [errors, setErrors] = useState<number>(0);
   const [totalChars, setTotalChars] = useState<number>(0);
-  const [wpmHistory, setWpmHistory] = useState<number[]>([]);
-  const [accuracyHistory, setAccuracyHistory] = useState<number[]>([]);
 
   // Refs for timing
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
-  const statsIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Generate text based on current preferences
   const generateText = (): string => {
@@ -46,38 +42,12 @@ const TypingTest: React.FC = () => {
     return selectedWords.join(' ');
   };
 
-  // Calculate current stats for live tracking
-  const calculateCurrentStats = () => {
-    if (!isActive || !startTimeRef.current) return { wpm: 0, accuracy: 100 };
-    
-    const timeElapsed = (Date.now() - startTimeRef.current) / 60000; // minutes
-    if (timeElapsed < 0.01) return { wpm: 0, accuracy: 100 };
-    
-    const wpm = Math.round(wordsCompleted / timeElapsed);
-    const accuracy = totalChars > 0 ? Math.round(((totalChars - errors) / totalChars) * 100) : 100;
-    
-    return { wpm: Math.max(0, wpm), accuracy: Math.max(0, Math.min(100, accuracy)) };
-  };
-
-  // Track performance history
-  const trackPerformance = () => {
-    if (!isActive) return;
-    
-    const stats = calculateCurrentStats();
-    setWpmHistory(prev => [...prev, stats.wpm]);
-    setAccuracyHistory(prev => [...prev, stats.accuracy]);
-  };
-
   // Initialize/Reset test
   const initializeTest = (): void => {
-    // Clear any existing timers
+    // Clear any existing timer
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
-    }
-    if (statsIntervalRef.current) {
-      clearInterval(statsIntervalRef.current);
-      statsIntervalRef.current = null;
     }
 
     // Reset all state
@@ -92,8 +62,6 @@ const TypingTest: React.FC = () => {
     setIsFinished(false);
     setErrors(0);
     setTotalChars(0);
-    setWpmHistory([]);
-    setAccuracyHistory([]);
     startTimeRef.current = 0;
   };
 
@@ -103,7 +71,7 @@ const TypingTest: React.FC = () => {
       setIsActive(true);
       startTimeRef.current = Date.now();
       
-      // Start timer
+      // Start timer - always use time mode now
       intervalRef.current = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -113,9 +81,6 @@ const TypingTest: React.FC = () => {
           return prev - 1;
         });
       }, 1000);
-
-      // Start performance tracking
-      statsIntervalRef.current = setInterval(trackPerformance, 2000);
     }
   };
 
@@ -124,16 +89,9 @@ const TypingTest: React.FC = () => {
     setIsActive(false);
     setIsFinished(true);
     
-    // Final performance track
-    trackPerformance();
-    
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
-    }
-    if (statsIntervalRef.current) {
-      clearInterval(statsIntervalRef.current);
-      statsIntervalRef.current = null;
     }
   };
 
@@ -149,7 +107,7 @@ const TypingTest: React.FC = () => {
     const value = e.target.value;
     setUserInput(value);
     
-    // Increment total characters typed
+    // Increment total characters typed (for accuracy calculation)
     if (value.length > userInput.length) {
       setTotalChars(prev => prev + 1);
     }
@@ -205,9 +163,6 @@ const TypingTest: React.FC = () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
-      if (statsIntervalRef.current) {
-        clearInterval(statsIntervalRef.current);
-      }
     };
   }, []);
 
@@ -224,65 +179,39 @@ const TypingTest: React.FC = () => {
           </p>
         </div>
 
-        {/* Show different content based on test state */}
-        {isFinished ? (
-          // Show detailed stats when finished
-          <DetailedStats
-            userStats={{
-              wpm: calculateCurrentStats().wpm,
-              accuracy: calculateCurrentStats().accuracy,
-              time: preferences.time - timeLeft,
-              charactersTyped: totalChars,
-              correctChars: totalChars - errors,
-              incorrectChars: errors,
-              wordsCompleted: wordsCompleted,
-              consistencyScore: Math.round(85 + Math.random() * 15) // Mock consistency score
-            }}
-            sessionData={{
-              wpmHistory,
-              accuracyHistory
-            }}
-            onTryAgain={initializeTest}
-            onReset={initializeTest}
-          />
-        ) : (
-          // Show test interface when not finished
-          <>
-            {/* Preference Panel */}
-            <Panel
-              preferences={preferences}
-              onPreferenceChange={handlePreferenceChange}
-              onReset={initializeTest}
-              onTryAgain={initializeTest}
-              isActive={isActive}
-              isFinished={isFinished}
-            />
+        {/* Preference Panel */}
+        <Panel
+          preferences={preferences}
+          onPreferenceChange={handlePreferenceChange}
+          onReset={initializeTest}
+          onTryAgain={initializeTest}
+          isActive={isActive}
+          isFinished={isFinished}
+        />
 
-            {/* Type Area */}
-            <TypeArea
-              currentText={currentText}
-              userInput={userInput}
-              currentWordIndex={currentWordIndex}
-              currentCharIndex={currentCharIndex}
-              isFinished={isFinished}
-              isActive={isActive}
-              onInputChange={handleInputChange}
-              onStart={startTest}
-            />
+        {/* Type Area */}
+        <TypeArea
+          currentText={currentText}
+          userInput={userInput}
+          currentWordIndex={currentWordIndex}
+          currentCharIndex={currentCharIndex}
+          isFinished={isFinished}
+          isActive={isActive}
+          onInputChange={handleInputChange}
+          onStart={startTest}
+        />
 
-            {/* Live Stats during test */}
-            <LiveStats
-              preferences={preferences}
-              timeLeft={timeLeft}
-              wordsCompleted={wordsCompleted}
-              errors={errors}
-              totalChars={totalChars}
-              isActive={isActive}
-              isFinished={isFinished}
-              currentStats={calculateCurrentStats()}
-            />
-          </>
-        )}
+        {/* Stats Board */}
+        <Board
+          preferences={preferences}
+          timeLeft={timeLeft}
+          wordsCompleted={wordsCompleted}
+          errors={errors}
+          totalChars={totalChars}
+          isActive={isActive}
+          isFinished={isFinished}
+          startTime={startTimeRef.current}
+        />
       </div>
     </div>
   );
