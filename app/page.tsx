@@ -40,7 +40,7 @@ import Link from 'next/link';
 
  export default function Page() {
   return (
-        <div className="min-h-screen w-full bg-background">
+        <div className="min-h-screen w-full bg-background pt-20">
          
          {/* Main Content */}
           

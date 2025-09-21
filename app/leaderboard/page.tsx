@@ -1,20 +1,15 @@
-import React from "react"
+
 import prisma from "@/lib/prisma"
 
-const displayTime = (time: string) => time.replace("T", "") + "s"
-const displayWordCount = (wordcount: string) => wordcount.replace("W", "")
-
-interface LeaderboardEntry {
-  id: string
-  wpm: number
-  wordcount: string
-  time: string
-  difficulty: string
-  user: {
-    id: string
-    name: string
-  }
+const displayDate = (date: Date) => {
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  })
 }
+
+
 
 const getDifficultyBadge = (difficulty: string) => {
   switch (difficulty.toLowerCase()) {
@@ -42,48 +37,46 @@ const getRankBadge = (rank: number): string => {
   }
 }
 
-export default async function Leaderboard() {
-  let leaderboard: LeaderboardEntry[] = await prisma.leaderBoard.findMany({
-    include: { user: true },
-  })
-
-  // Difficulty priority map
-  const difficultyPriority: Record<string, number> = {
-    EASY: 1,
-    MEDIUM: 2,
-    HARD: 3,
+interface LeaderboardEntry {
+  id: string
+  wpm: number
+  difficulty: string
+  points: number
+  user: {
+    id: string
+    name: string
+    updatedAt: Date
   }
+}
 
-  // Sort by WPM -> wordcount -> difficulty
-  leaderboard.sort((a, b) => {
-    if (b.wpm !== a.wpm) return b.wpm - a.wpm
+export default async function Leaderboard() {
 
-    const wordCountA = parseInt(a.wordcount.replace("W", ""))
-    const wordCountB = parseInt(b.wordcount.replace("W", ""))
-    if (wordCountB !== wordCountA) return wordCountB - wordCountA
-
-    return difficultyPriority[b.difficulty.toLowerCase()] - difficultyPriority[a.difficulty.toLowerCase()]
+  const leaderboard: LeaderboardEntry[] = await prisma.leaderBoard.findMany({
+    take: 20,
+    orderBy: [
+      { wpm: "desc" },
+      { points: "desc" }
+    ],
+    include: { user: true},
   })
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 mt-20">
-      {/* Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-[#e6f1ff] mb-2">Leaderboard</h2>
-        <p className="text-[#8892b0]">Top performers ranked by WPM, words typed, and difficulty</p>
+        <p className="text-[#8892b0]">Top performers ranked by WPM and points</p>
       </div>
 
       {/* Leaderboard Table */}
       <div className="bg-[#1a1f2e] rounded-xl shadow-xl overflow-hidden border border-[#4fd1c7]/10">
         {/* Table Header */}
         <div className="bg-[#0f1419] px-6 py-4 border-b border-[#4fd1c7]/20">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 font-semibold text-[#00d9b7] text-sm uppercase tracking-wide">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 font-semibold text-[#00d9b7] text-sm uppercase tracking-wide">
             <div className="flex items-center">Rank</div>
             <div className="flex items-center">Username</div>
             <div className="hidden md:flex items-center">WPM</div>
-            <div className="hidden md:flex items-center">Time</div>
-            <div className="hidden md:flex items-center">Words</div>
-            <div className="hidden md:flex items-center">Difficulty</div>
+            <div className="hidden md:flex items-center">Points</div>
+            <div className="hidden md:flex items-center">Date</div>
           </div>
         </div>
 
@@ -98,8 +91,8 @@ export default async function Leaderboard() {
                   index % 2 === 0 ? "bg-[#1a1f2e]" : "bg-[#0f1419]/50"
                 }`}
               >
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-4 items-center">
-                  {/* Rank with badge */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-center">
+                  {/* Rank */}
                   <div className="flex items-center">
                     <span
                       className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${getRankBadge(rank)}`}
@@ -108,7 +101,7 @@ export default async function Leaderboard() {
                     </span>
                   </div>
 
-                  {/* Username with @ */}
+                  {/* Username */}
                   <div className="flex items-center">
                     <span className="font-medium text-[#e6f1ff] truncate">
                       @{user.user.name}
@@ -119,30 +112,30 @@ export default async function Leaderboard() {
                   <div className="hidden md:flex items-center">
                     <span className="text-[#4fd1c7] font-semibold">{user.wpm}</span>
                   </div>
-
-                  {/* Time */}
-                  <div className="hidden md:flex items-center">
-                    <span className="text-[#8892b0]">{displayTime(user.time)}</span>
-                  </div>
-
-                  {/* Words */}
-                  <div className="hidden md:flex items-center">
-                    <span className="text-[#8892b0]">{displayWordCount(user.wordcount)}</span>
-                  </div>
-
                   {/* Difficulty */}
-                  <div className="hidden md:flex items-center">
+                  {/* <div className="hidden md:flex items-center">
                     <span className={getDifficultyBadge(user.difficulty)}>
                       {user.difficulty.charAt(0).toUpperCase() + user.difficulty.slice(1)}
                     </span>
+                  </div> */}
+
+                  {/* Points */}
+                  <div className="hidden md:flex items-center">
+                    <span className="text-[#e6f1ff] font-semibold">{user.points}</span>
                   </div>
+                  <div className="hidden md:flex items-center">
+                    <span className="text-[#e6f1ff] font-semibold">
+                    {displayDate(user.user.updatedAt)}
+                    </span>
+                  </div>
+
+
                 </div>
 
                 {/* Mobile-only additional info */}
                 <div className="md:hidden mt-3 pt-3 border-t border-[#4fd1c7]/10 flex justify-between text-sm text-[#8892b0]">
                   <span>WPM: <span className="text-[#4fd1c7] font-semibold">{user.wpm}</span></span>
-                  <span>Time: <span className="text-[#e6f1ff]">{displayTime(user.time)}</span></span>
-                  <span>Words: <span className="text-[#e6f1ff]">{displayWordCount(user.wordcount)}</span></span>
+                  <span>Points: <span className="text-[#e6f1ff]">{user.points}</span></span>
                   <span>Difficulty: <span className={getDifficultyBadge(user.difficulty)}>{user.difficulty.charAt(0).toUpperCase() + user.difficulty.slice(1)}</span></span>
                 </div>
               </div>

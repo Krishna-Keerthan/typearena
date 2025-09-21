@@ -18,12 +18,9 @@ export enum TestTime {
   }
   
   // Leaderboard type
-  export type LeaderBoard = {
-    id: string
-    userId: string
+  export type GameResult = {
     wpm: number
-    time: TestTime
-    wordCount: WordCount
+    accuracy:number
+    userId:string
     difficulty: Difficulty
-    createdAt: Date
   }

@@ -2,8 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { Preferences } from '@/components/panel';
-import { createLeaderBoard } from '@/actions/leaderboards';
-import { Difficulty, TestTime, WordCount } from '@/types/leaderboard';
+import { updateLeaderboard } from '@/actions/leaderboards';
+import { useSession } from 'next-auth/react';
+import { Difficulty } from '@/types/leaderboard';
 
 interface BoardProps {
   preferences: Preferences;
@@ -26,6 +27,11 @@ const Board: React.FC<BoardProps> = ({
   isFinished,
   startTime
 }) => {
+
+  const {data:session} = useSession()
+  const userId = session?.user.id
+
+
   // Calculate precise WPM and accuracy
   const calculateStats = () => {
     let timeElapsed: number;
@@ -65,42 +71,29 @@ const Board: React.FC<BoardProps> = ({
   const { wpm, accuracy, netWpm } = calculateStats();
 
   const addLeaderboard = async () => {
-    // Time enum
-    const timeEnum =
-      preferences.time === 15
-        ? "T15"
-        : preferences.time === 30
-          ? "T30"
-          : "T60"; 
-  
 
-    const difficultyEnum =
+    const difficultyEnum: Difficulty =
       preferences.difficulty.toLowerCase() === "easy"
-        ? "EASY"
+        ? Difficulty.EASY
         : preferences.difficulty.toLowerCase() === "medium"
-          ? "MEDIUM"
-          : "HARD"; 
-  
-    // Word count enum
-    const wordCountEnum =
-      preferences.words === 10
-        ? "W10"
-        : preferences.words === 25
-          ? "W25"
-          : "W50"; 
-  
- if (isFinished) {
-  const result = await createLeaderBoard({
-    wpm,
-    time: timeEnum as TestTime,
-    difficulty: difficultyEnum as Difficulty,
-    wordCount: wordCountEnum as WordCount,
-  });
-  console.log(result);
- }
-  
+          ? Difficulty.MEDIUM
+          : Difficulty.HARD;
+
+    if (isFinished) {
+      if (!userId) {
+        return
+      }
+      const result = await updateLeaderboard({
+        wpm,
+        accuracy,
+        difficulty: difficultyEnum,
+        userId
+      });
+      console.log(result);
+    }
+
   };
-  
+
 
 
   useEffect(() => {
