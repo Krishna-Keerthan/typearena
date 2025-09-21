@@ -40,7 +40,7 @@ const Panel: React.FC<PanelProps> = ({
         <div className="flex items-center gap-3">
           <span className="text-gray-300 font-medium text-sm">Timer</span>
           <div className="flex gap-1 p-1 bg-gray-800 rounded-md border border-gray-600">
-            {[15, 30, 45, 60, 120].map(time => (
+            {[15, 30, 60,].map(time => (
               <button
                 key={time}
                 onClick={() => handlePreferenceChange('time', time)}
@@ -82,7 +82,7 @@ const Panel: React.FC<PanelProps> = ({
         <div className="flex items-center gap-3">
           <span className="text-gray-300 font-medium text-sm">Word Count</span>
           <div className="flex gap-1 p-1 bg-gray-800 rounded-md border border-gray-600">
-            {[10, 25, 50, 100].map(count => (
+            {[10, 25, 50].map(count => (
               <button
                 key={count}
                 onClick={() => handlePreferenceChange('words', count)}

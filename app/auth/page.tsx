@@ -74,7 +74,7 @@ export default function TypeFastAuth() {
         if (res.success) {
           toast.success("Registration Successful");
           setFormData({ name: "", email: "", password: "" });
-          router.push("/type");
+         setActiveTab("signin")
         }
         if (res.error) {
           toast.error(res.error);

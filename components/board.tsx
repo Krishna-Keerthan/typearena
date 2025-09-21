@@ -1,5 +1,9 @@
-import React from 'react';
+'use client'
+
+import React, { useEffect } from 'react';
 import { Preferences } from '@/components/panel';
+import { createLeaderBoard } from '@/actions/leaderboards';
+import { Difficulty, TestTime, WordCount } from '@/types/leaderboard';
 
 interface BoardProps {
   preferences: Preferences;
@@ -25,7 +29,7 @@ const Board: React.FC<BoardProps> = ({
   // Calculate precise WPM and accuracy
   const calculateStats = () => {
     let timeElapsed: number;
-    
+
     // Calculate based on elapsed time from start
     if (isFinished && startTime > 0) {
       timeElapsed = (Date.now() - startTime) / 60000; // Convert to minutes
@@ -35,28 +39,75 @@ const Board: React.FC<BoardProps> = ({
       // Use time elapsed from timer for more precision
       timeElapsed = (preferences.time - timeLeft) / 60;
     }
-    
+
     // Ensure minimum time for calculations
     if (timeElapsed < 0.01) timeElapsed = 0.01;
-    
+
     // Calculate WPM (Words Per Minute)
     const wpm = Math.round(wordsCompleted / timeElapsed);
-    
+
     // Calculate accuracy percentage
     const accuracy = totalChars > 0 ? Math.round(((totalChars - errors) / totalChars) * 100) : 100;
-    
+
     // Calculate net WPM (accounting for errors)
     const netWpm = Math.round((wordsCompleted - errors) / timeElapsed);
-    
-    return { 
-      wpm: Math.max(0, wpm), 
+
+    return {
+      wpm: Math.max(0, wpm),
       accuracy: Math.max(0, Math.min(100, accuracy)),
       netWpm: Math.max(0, netWpm),
       timeElapsed: timeElapsed * 60 // Convert back to seconds for display
     };
   };
 
+
+
   const { wpm, accuracy, netWpm } = calculateStats();
+
+  const addLeaderboard = async () => {
+    // Time enum
+    const timeEnum =
+      preferences.time === 15
+        ? "T15"
+        : preferences.time === 30
+          ? "T30"
+          : "T60"; 
+  
+
+    const difficultyEnum =
+      preferences.difficulty.toLowerCase() === "easy"
+        ? "EASY"
+        : preferences.difficulty.toLowerCase() === "medium"
+          ? "MEDIUM"
+          : "HARD"; 
+  
+    // Word count enum
+    const wordCountEnum =
+      preferences.words === 10
+        ? "W10"
+        : preferences.words === 25
+          ? "W25"
+          : "W50"; 
+  
+ if (isFinished) {
+  const result = await createLeaderBoard({
+    wpm,
+    time: timeEnum as TestTime,
+    difficulty: difficultyEnum as Difficulty,
+    wordCount: wordCountEnum as WordCount,
+  });
+  console.log(result);
+ }
+  
+  };
+  
+
+
+  useEffect(() => {
+    addLeaderboard()
+  }, [isFinished])
+
+
 
   // Get time display - always show countdown
   const getTimeDisplay = (): string => {
@@ -82,38 +133,37 @@ const Board: React.FC<BoardProps> = ({
               {getTimeDisplay()}
             </span>
           </div>
-          
+
           <div className="w-px h-4 bg-gray-700" />
-          
+
           <div className="flex items-center gap-2">
             <span className="text-gray-400 text-xs font-medium uppercase">WPM</span>
             <span className="text-[#00d9b7] font-bold text-lg tabular-nums min-w-[40px] text-center">
               {wpm}
             </span>
           </div>
-          
+
           <div className="w-px h-4 bg-gray-700" />
-          
+
           <div className="flex items-center gap-2">
             <span className="text-gray-400 text-xs font-medium uppercase">Accuracy</span>
-            <span className={`font-bold text-lg tabular-nums min-w-[50px] text-center ${
-              accuracy >= 95 ? 'text-green-400' : 
-              accuracy >= 85 ? 'text-yellow-400' : 
-              'text-red-400'
-            }`}>
+            <span className={`font-bold text-lg tabular-nums min-w-[50px] text-center ${accuracy >= 95 ? 'text-green-400' :
+              accuracy >= 85 ? 'text-yellow-400' :
+                'text-red-400'
+              }`}>
               {accuracy}%
             </span>
           </div>
-          
+
           <div className="w-px h-4 bg-gray-700" />
-          
+
           <div className="flex items-center gap-2">
             <span className="text-gray-400 text-xs font-medium uppercase">Words</span>
             <span className="text-white font-bold text-lg tabular-nums min-w-[40px] text-center">
               {wordsCompleted}
             </span>
           </div>
-          
+
           {errors > 0 && (
             <>
               <div className="w-px h-4 bg-gray-700" />
@@ -143,7 +193,7 @@ const Board: React.FC<BoardProps> = ({
               Test Results
             </h2>
           </div>
-          
+
           {/* Main Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {/* Gross WPM */}
@@ -158,7 +208,7 @@ const Board: React.FC<BoardProps> = ({
                 Gross Speed
               </div>
             </div>
-            
+
             {/* Net WPM */}
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl text-center border border-gray-700 hover:border-blue-400 transition-all duration-200">
               <div className="text-3xl lg:text-4xl font-bold text-blue-400 mb-2 tabular-nums">
@@ -171,16 +221,14 @@ const Board: React.FC<BoardProps> = ({
                 After Errors
               </div>
             </div>
-            
+
             {/* Accuracy */}
-            <div className={`bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl text-center border border-gray-700 hover:border-${
-              accuracy >= 95 ? 'green-400' : accuracy >= 85 ? 'yellow-400' : 'red-400'
-            } transition-all duration-200`}>
-              <div className={`text-3xl lg:text-4xl font-bold mb-2 tabular-nums ${
-                accuracy >= 95 ? 'text-green-400' : 
-                accuracy >= 85 ? 'text-yellow-400' : 
-                'text-red-400'
-              }`}>
+            <div className={`bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl text-center border border-gray-700 hover:border-${accuracy >= 95 ? 'green-400' : accuracy >= 85 ? 'yellow-400' : 'red-400'
+              } transition-all duration-200`}>
+              <div className={`text-3xl lg:text-4xl font-bold mb-2 tabular-nums ${accuracy >= 95 ? 'text-green-400' :
+                accuracy >= 85 ? 'text-yellow-400' :
+                  'text-red-400'
+                }`}>
                 {accuracy}%
               </div>
               <div className="text-gray-400 text-sm font-medium uppercase tracking-wide">
@@ -190,7 +238,7 @@ const Board: React.FC<BoardProps> = ({
                 {accuracy >= 95 ? 'Excellent' : accuracy >= 85 ? 'Good' : 'Needs Work'}
               </div>
             </div>
-            
+
             {/* Words */}
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl text-center border border-gray-700 hover:border-white transition-all duration-200">
               <div className="text-3xl lg:text-4xl font-bold text-white mb-2 tabular-nums">
@@ -213,7 +261,7 @@ const Board: React.FC<BoardProps> = ({
                 <span className="text-xl font-bold text-white tabular-nums">{totalChars}</span>
               </div>
             </div>
-            
+
             <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 text-center">
               <div className="flex items-center justify-center gap-3">
                 <span className="text-gray-400 text-sm">Total Errors:</span>

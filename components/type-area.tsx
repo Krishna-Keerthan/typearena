@@ -95,12 +95,12 @@ const TypeArea: React.FC<TypeAreaProps> = ({
                     if (charIndex < currentCharIndex) {
                       const typedChar = userInput[charIndex];
                       if (typedChar === char) {
-                        className += ' text-[#00d9b7] bg-[#00d9b7]/20 rounded-sm px-0.5';
+                        className += ' text-[#00d9b7] bg-[#00d9b7]/20 rounded-sm ';
                       } else {
-                        className += ' text-red-400 bg-red-500/30 rounded-sm px-0.5';
+                        className += ' text-red-400 bg-red-500/30 rounded-sm ';
                       }
                     } else if (charIndex === currentCharIndex) {
-                      className += ' text-white bg-[#00d9b7] rounded-sm animate-pulse px-0.5';
+                      className += ' text-white bg-[#00d9b7] rounded-sm px-1';
                     } else {
                       className += ' text-gray-400';
                     }
