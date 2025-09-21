@@ -66,7 +66,7 @@ export default async function Leaderboard() {
   })
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6">
+    <div className="w-full max-w-6xl mx-auto p-6 mt-20">
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-[#e6f1ff] mb-2">Leaderboard</h2>

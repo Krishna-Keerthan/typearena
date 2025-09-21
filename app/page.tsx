@@ -4,6 +4,7 @@ import { Zap, Users, BarChart3, Settings, Minimize2} from 'lucide-react';
 import { Highlighter } from "@/components/ui/highlighter";
 
 import Footer from '@/components/footer';
+import Link from 'next/link';
   const features = [
     {
       icon: <Zap className="w-8 h-8 text-[var(--primary)]" />,
@@ -60,9 +61,11 @@ import Footer from '@/components/footer';
             real-time stats in a sleek, minimalist interface
           </p>
 
-          <button className="px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200 hover:scale-105 hover:shadow-lg bg-[var(--primary)] hover:bg-[var(--primaryHover)] text-white">
+         <Link href={'/auth'}>
+         <button className="px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200 hover:scale-105 hover:shadow-lg bg-[var(--primary)] hover:bg-[var(--primaryHover)] text-white">
             Start Typing Now →
           </button>
+         </Link>
         </div>
 
         {/* Why Choose TypeFast Section */}

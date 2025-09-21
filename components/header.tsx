@@ -21,7 +21,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 bg-background z-50 w-full py-4 px-6">
+    <header className="fixed top-0 bg-background z-50 w-full py-4 px-6">
       <nav className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         
