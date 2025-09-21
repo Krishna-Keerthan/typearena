@@ -1,7 +1,9 @@
 "use client";
 import React from 'react';
 import { Zap, Users, BarChart3, Settings, Minimize2} from 'lucide-react';
-import Header from '@/components/header';
+import { Highlighter } from "@/components/ui/highlighter";
+
+import Footer from '@/components/footer';
   const features = [
     {
       icon: <Zap className="w-8 h-8 text-[var(--primary)]" />,
@@ -48,9 +50,9 @@ import Header from '@/components/header';
             Master Your Typing Skills
             <br />
             with{' '}
-            <span className="relative text-[var(--primary)]">
+              <Highlighter  action="underline" color="#00d9b7">
               TypeFast
-            </span>
+              </Highlighter>
           </h1>
           
           <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto leading-relaxed text-[var(--textMuted)]">
@@ -148,6 +150,7 @@ import Header from '@/components/header';
             </div>
           </div>
         </div>
+        <Footer/>
       </main>
       </div>
   
