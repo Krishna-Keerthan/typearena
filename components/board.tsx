@@ -62,7 +62,7 @@ const Board: React.FC<BoardProps> = ({
       wpm: Math.max(0, wpm),
       accuracy: Math.max(0, Math.min(100, accuracy)),
       netWpm: Math.max(0, netWpm),
-      timeElapsed: timeElapsed * 60 // Convert back to seconds for display
+      timeElapsed: timeElapsed * 60 
     };
   };
 

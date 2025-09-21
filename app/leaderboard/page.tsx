@@ -73,7 +73,7 @@ export default async function Leaderboard() {
         <div className="bg-[#0f1419] px-6 py-4 border-b border-[#4fd1c7]/20">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 font-semibold text-[#00d9b7] text-sm uppercase tracking-wide">
             <div className="flex items-center">Rank</div>
-            <div className="flex items-center">Username</div>
+            <div className="flex items-center">Name</div>
             <div className="hidden md:flex items-center">WPM</div>
             <div className="hidden md:flex items-center">Points</div>
             <div className="hidden md:flex items-center">Date</div>
@@ -104,7 +104,7 @@ export default async function Leaderboard() {
                   {/* Username */}
                   <div className="flex items-center">
                     <span className="font-medium text-[#e6f1ff] truncate">
-                      @{user.user.name}
+                      {user.user.name}
                     </span>
                   </div>
 

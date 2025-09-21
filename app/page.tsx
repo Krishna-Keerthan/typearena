@@ -47,7 +47,7 @@ import Link from 'next/link';
         <main className="max-w-6xl mx-auto px-6 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight text-[var(--text)]">
+          <h1 className=" text-3xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight text-[var(--text)]">
             Master Your Typing Skills
             <br />
             with{' '}
@@ -56,7 +56,7 @@ import Link from 'next/link';
               </Highlighter>
           </h1>
           
-          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto leading-relaxed text-[var(--textMuted)]">
+          <p className="text-base md:text-xl mb-8 max-w-2xl mx-auto leading-relaxed text-[var(--textMuted)]">
             Practice typing, challenge friends, and track improvements with 
             real-time stats in a sleek, minimalist interface
           </p>

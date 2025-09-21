@@ -69,73 +69,63 @@ const TypeArea: React.FC<TypeAreaProps> = ({
 
   const renderText = () => {
     if (!currentText) return null;
-    
+  
     const words = currentText.split(' ');
-    
+  
     return (
-      <div className="p-6 font-mono text-lg leading-relaxed">
-        <div className="text-xs text-gray-500 uppercase tracking-wider font-sans mb-6">
+      <div className="p-4 font-mono text-lg leading-relaxed select-none">
+        <div className="text-xs text-gray-500 uppercase tracking-wider font-sans mb-4">
           TYPE THE TEXT BELOW
         </div>
-        
-        <div className="flex flex-wrap mb-4">
+  
+        <div className="flex flex-wrap">
           {words.map((word, wordIndex) => {
             const isCurrentWord = wordIndex === currentWordIndex;
             const isPastWord = wordIndex < currentWordIndex;
-            const isFutureWord = wordIndex > currentWordIndex;
-            
+  
             return (
               <span key={`${wordIndex}-${word}`} className="mr-2 mb-1">
                 {word.split('').map((char, charIndex) => {
-                  let className = 'transition-all duration-150';
-                  
+                  let className = 'inline-block transition-colors duration-150';
+  
                   if (isPastWord) {
                     className += ' text-gray-600';
                   } else if (isCurrentWord) {
                     if (charIndex < currentCharIndex) {
                       const typedChar = userInput[charIndex];
-                      if (typedChar === char) {
-                        className += ' text-[#00d9b7] bg-[#00d9b7]/20 rounded-sm ';
-                      } else {
-                        className += ' text-red-400 bg-red-500/30 rounded-sm ';
-                      }
+                      className += typedChar === char
+                        ? ' text-[#00d9b7]'
+                        : ' text-red-400';
                     } else if (charIndex === currentCharIndex) {
-                      className += ' text-white bg-[#00d9b7] rounded-sm px-1';
+                      className += ' text-white underline'; // subtle cursor
                     } else {
                       className += ' text-gray-400';
                     }
-                  } else if (isFutureWord) {
+                  } else {
                     className += ' text-gray-500';
                   }
-                  
+  
                   return (
-                    <span 
-                      key={`${wordIndex}-${charIndex}-${char}`} 
-                      className={className}
-                    >
+                    <span key={`${wordIndex}-${charIndex}-${char}`} className={className}>
                       {char}
                     </span>
                   );
                 })}
-                
-                {/* Space indicator for current word */}
-                {isCurrentWord && currentCharIndex >= word.length && (
-                  <span className="inline-block w-1 h-5 bg-[#00d9b7] animate-pulse ml-1 rounded-sm" />
-                )}
+                {/* Space after word */}
+                <span className="inline-block w-1">&nbsp;</span>
               </span>
             );
           })}
         </div>
-        
-        {/* Progress indicator */}
-        {currentText && (
-          <div className="text-xs text-gray-500 font-sans text-right">
-            {currentWordIndex + 1} / {currentText.split(' ').length} words
-          </div>
-        )}
+  
+        {/* Progress */}
+        <div className="text-xs text-gray-500 font-sans text-right mt-2">
+          {currentWordIndex + 1} / {words.length} words
+        </div>
       </div>
     );
   };
+  
 
   return (
     <div className="space-y-4">
