@@ -54,7 +54,7 @@ export default function Page({ params }: { params: { code: string } }) {
       {/* Main Section */}
       <main className="flex flex-1 p-6 gap-6 ">
         {/* Left: Realtime Chat */}
-        <div className="flex-1 h-[500px] overflow-y-auto rounded-lg p-4 overflow-auto">
+        <div className="flex-1 h- rounded-lg p-4 overflow-auto">
           <RealtimeChat
             roomName={roomDetails.name}
             username={session.user?.name ?? session.user?.id}
