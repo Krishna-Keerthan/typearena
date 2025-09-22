@@ -54,7 +54,6 @@ export default async function Leaderboard() {
   const leaderboard: LeaderboardEntry[] = await prisma.leaderBoard.findMany({
     take: 20,
     orderBy: [
-      { wpm: "desc" },
       { points: "desc" }
     ],
     include: { user: true},
