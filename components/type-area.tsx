@@ -12,7 +12,6 @@ interface TypeAreaProps {
   onStart: () => void;
 }
 
-// Word lists for different difficulties
 export const wordLists: Record<Difficulty, string[]> = {
   easy: [
     'the', 'and', 'you', 'that', 'was', 'for', 'are', 'with', 'his', 'they', 

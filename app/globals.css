@@ -16,6 +16,17 @@
 }
 
 /* Utility classes using @apply */
+
+
+
+.bg-primary{
+  @apply bg-[var(--textMuted)]
+}
+.bg-secondary{
+  @apply bg-[var(--secondary)]
+}
+
+
 .bg-background {
   @apply bg-[var(--background)];
 }
