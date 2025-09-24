@@ -4,6 +4,8 @@ import { RealtimeChat } from "@/components/realtime-chat"
 import { getRoomByCode } from "@/actions/room"
 import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
+import { useRealtimeChat } from "@/hooks/use-realtime-chat"
 
 interface RoomDetails {
   id: string
@@ -12,17 +14,23 @@ interface RoomDetails {
   mondeOption?: string
 }
 
-export default function Page({ params }: { params: { code: string } }) {
+export default function Page() {
+  const { code } = useParams()
   const { data: session } = useSession()
   const [roomDetails, setRoomDetails] = useState<RoomDetails | null>(null)
 
+
+  // console.log("This is a participant details" ,participants)
+
   useEffect(() => {
     async function fetchRoom() {
-      const room = await getRoomByCode(params.code)
-      setRoomDetails(room)
+      if (typeof code === 'string') {
+        const room = await getRoomByCode(code)
+        setRoomDetails(room)
+      }
     }
     fetchRoom()
-  }, [params.code])
+  }, [code])
 
   if (!session) {
     return <p className="pt-20 text-center text-white">Loading session...</p>
@@ -34,7 +42,7 @@ export default function Page({ params }: { params: { code: string } }) {
 
   return (
     <div className=" text-white flex flex-col pt-20 px-40">
-      
+
       {/* Top Bar */}
       <div className="flex justify-between items-center px-6 py-4">
         <div className="space-x-4">
@@ -54,7 +62,7 @@ export default function Page({ params }: { params: { code: string } }) {
       {/* Main Section */}
       <main className="flex flex-1 p-6 gap-6 ">
         {/* Left: Realtime Chat */}
-        <div className="flex-1 h- rounded-lg p-4 overflow-auto">
+        <div className="flex-1 rounded-lg p-4">
           <RealtimeChat
             roomName={roomDetails.name}
             username={session.user?.name ?? session.user?.id}
@@ -62,12 +70,8 @@ export default function Page({ params }: { params: { code: string } }) {
           />
         </div>
 
-        {/* Right: Typist List */}
-        <div className="w-1/3 bg-card rounded-lg p-6 overflow-auto">
-          {/* Replace this with your TypistList component */}
-          <h2 className="text-lg font-bold mb-2">Typist List</h2>
-          <p>Participants will appear here...</p>
-        </div>
+      
+
       </main>
     </div>
   )
