@@ -12,6 +12,7 @@ import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { signInSchema, signUpSchema } from "@/types/auth";
 import { useRouter } from "next/navigation";
+import { FcGoogle } from "react-icons/fc";
 
 type FormErrors = Partial<Record<"name" | "email" | "password", string>>;
 
@@ -186,7 +187,7 @@ export default function TypeFastAuth() {
                     onClick={() => signIn("google", { callbackUrl: "/type" })}
                     className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
                   >
-                    <img src="/google-icon.png" alt="Google" className="w-5 h-5" />
+                   <FcGoogle />
                     Sign in with Google
                   </Button>
                 </div>

@@ -3,27 +3,7 @@ import CreateRoom from '@/components/createRoom';
 import JoinRoom from '@/components/joinRoom';
 import PublicRoom from '@/components/publicRoom';
 
-
-
-
 const MultiplayerArena  = async () => {
-  
-  const handleJoinRoom = (roomCode: string) => {
-    console.log('Joining room with code:', roomCode);
-    // Add your room joining logic here
-    // Example: validate room code and redirect
-  };
-
-  // const handleJoinUserRoom = async () => {
-  //   const result = await getRoomByUserId(userId)
-
-  //   console.log(result)
-  // };
-
-  
-
-  
-
   return (
     <div className="min-h-screen bg-background p-6">
       

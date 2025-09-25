@@ -1,36 +1,56 @@
 "use client"
 
-import { RealtimeChat } from "@/components/realtime-chat"
 import { getRoomByCode } from "@/actions/room"
 import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { useRealtimeChat } from "@/hooks/use-realtime-chat"
+import ChatBox from "@/components/chatBox"
+import ParticipantsList from "@/components/participantsList"
+import { useRoom } from "@/context/roomContext"
+import Race from "@/components/Race"
+
+
 
 interface RoomDetails {
   id: string
   name: string
   mode?: string
   mondeOption?: string
+  hostId: string
 }
 
 export default function Page() {
   const { code } = useParams()
   const { data: session } = useSession()
   const [roomDetails, setRoomDetails] = useState<RoomDetails | null>(null)
+  const [isHost, setIsHost] = useState(false)
+  const { isStartRace, startRace } = useRoom()
 
-
-  // console.log("This is a participant details" ,participants)
 
   useEffect(() => {
     async function fetchRoom() {
       if (typeof code === 'string') {
-        const room = await getRoomByCode(code)
-        setRoomDetails(room)
+        const result = await getRoomByCode(code)
+        if (!result?.success) {
+          return
+        }
+        else {
+          setRoomDetails(result.data)
+          if (result.data?.hostId == session?.user.id) {
+            setIsHost(true)
+          }
+        }
+
       }
     }
     fetchRoom()
   }, [code])
+
+  const handleStartRace = () => {
+    if (isHost) {
+      startRace(true)
+    }
+  }
 
   if (!session) {
     return <p className="pt-20 text-center text-white">Loading session...</p>
@@ -53,24 +73,26 @@ export default function Page() {
           <span className="px-2 py-1 bg-yellow-300 text-amber-900 rounded-lg font-medium">
             {roomDetails.mondeOption || "Option A"}
           </span>
+          {isHost && (<span className="px-2 py-1 bg-green-300 text-gray-900 rounded-lg font-medium">
+            Host
+          </span>)}
         </div>
-        <button className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition">
-          Start Race
-        </button>
+        {isHost && !isStartRace && (<button onClick={handleStartRace} className="px-4  py-1 rounded-lg font-semibold text-lg transition-all duration-200 hover:scale-105 hover:shadow-lg bg-[var(--primary)] hover:bg-[var(--primaryHover)] text-white">
+          Start Race →
+        </button>)}
       </div>
 
       {/* Main Section */}
       <main className="flex flex-1 p-6 gap-6 ">
-        {/* Left: Realtime Chat */}
-        <div className="flex-1 rounded-lg p-4">
-          <RealtimeChat
-            roomName={roomDetails.name}
-            username={session.user?.name ?? session.user?.id}
-            key={roomDetails.id}
-          />
-        </div>
 
-      
+        {!isStartRace ? (
+          <>
+            <ChatBox />
+            <ParticipantsList />
+          </>
+        ) : (
+          <Race />
+        )}
 
       </main>
     </div>

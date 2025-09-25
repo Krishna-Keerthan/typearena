@@ -37,22 +37,22 @@ export async function getRoomByUserId(userId: string) {
     const session = getServerSession(authOptions)
 
     if (!session) {
-        return { success: false, data:null}
+        return { success: false, data: null }
     }
 
     try {
         const room = await prisma.room.findMany({
             where: { hostId: userId },
-           select:{
-            name:true,
-            code:true,
-            id:true,
-            hostId:true,
-            mode:true,
-            mondeOption:true,
-            user:true
-           }
-            
+            select: {
+                name: true,
+                code: true,
+                id: true,
+                hostId: true,
+                mode: true,
+                mondeOption: true,
+                user: true
+            }
+
         })
 
         return { success: true, data: room }
@@ -63,13 +63,26 @@ export async function getRoomByUserId(userId: string) {
 }
 
 export async function getRoomByCode(code: string) {
-    return await prisma.room.findUnique({
-      where: { code },
-      select: {
-        id: true,
-        name: true,
-        mode:true,
-        mondeOption:true,
-      },
-    })
-  }
+    const session = getServerSession(authOptions)
+
+    if (!session) {
+        return { success: false, data: null }
+    }
+
+    try {
+        const room = await prisma.room.findUnique({
+            where: { code },
+            select: {
+                id: true,
+                name: true,
+                mode: true,
+                mondeOption: true,
+                hostId:true
+            },
+        })
+        return { success: true, data: room }
+    } catch (error) {
+        console.error(error)
+        console.log("Room not found!")
+    }
+}
