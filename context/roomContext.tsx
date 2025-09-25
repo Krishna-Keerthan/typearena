@@ -90,7 +90,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children, supabase }
             key: username
           },
           broadcast: {
-            self: true
+            self: false
           }
         },
       });
