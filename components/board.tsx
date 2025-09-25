@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Preferences } from '@/components/panel';
 import { updateLeaderboard } from '@/actions/leaderboards';
 import { useSession } from 'next-auth/react';
@@ -70,7 +70,7 @@ const Board: React.FC<BoardProps> = ({
 
   const { wpm, accuracy, netWpm } = calculateStats();
 
-  const addLeaderboard = async () => {
+  const addLeaderboard = useCallback(async () => {
 
     const difficultyEnum: Difficulty =
       preferences.difficulty.toLowerCase() === "easy"
@@ -92,13 +92,13 @@ const Board: React.FC<BoardProps> = ({
       console.log(result);
     }
 
-  };
+  }, [isFinished, userId, wpm, accuracy, preferences.difficulty]);
 
 
 
   useEffect(() => {
     addLeaderboard()
-  }, [isFinished])
+  }, [isFinished, addLeaderboard])
 
 
 

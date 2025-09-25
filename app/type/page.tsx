@@ -1,6 +1,6 @@
 "use client"
-import React, { useState, useEffect, useRef } from 'react';
-import Panel, { Preferences, Difficulty } from '@/components/panel';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Panel, { Preferences } from '@/components/panel';
 import TypeArea, { wordLists } from '@/components/type-area';
 import Board from '@/components/board';
 
@@ -29,7 +29,7 @@ const TypingTest: React.FC = () => {
   const startTimeRef = useRef<number>(0);
 
   // Generate text based on current preferences
-  const generateText = (): string => {
+  const generateText = useCallback((): string => {
     const words = wordLists[preferences.difficulty];
     const wordCount = preferences.words;
     const shuffled = [...words].sort(() => Math.random() - 0.5);
@@ -40,10 +40,10 @@ const TypingTest: React.FC = () => {
     }
     
     return selectedWords.join(' ');
-  };
+  }, [preferences.difficulty, preferences.words]);
 
   // Initialize/Reset test
-  const initializeTest = (): void => {
+  const initializeTest = useCallback((): void => {
     // Clear any existing timer
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -63,7 +63,7 @@ const TypingTest: React.FC = () => {
     setErrors(0);
     setTotalChars(0);
     startTimeRef.current = 0;
-  };
+  }, [preferences, generateText]);
 
   // Start the test
   const startTest = (): void => {
@@ -152,7 +152,7 @@ const TypingTest: React.FC = () => {
   // Reset test when preferences change
   useEffect(() => {
     initializeTest();
-  }, [preferences]);
+  }, [preferences, initializeTest]);
 
   // Initialize on component mount
   useEffect(() => {
@@ -164,7 +164,7 @@ const TypingTest: React.FC = () => {
         clearInterval(intervalRef.current);
       }
     };
-  }, []);
+  }, [initializeTest]);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">

@@ -31,13 +31,16 @@ const JoinRoom = () => {
       const result = await getRoomByCode(roomCode);
 
       if (result?.success) {
+        if(!result.data){
+          return
+        }
         const { id, name } = result.data;
         await joinRoom(id, name, username);
 
         toast.success('Room joined successfully');
         router.push(`/multiplayer/room/${roomCode}`);
       } else {
-        toast.error(result?.message ?? 'Invalid room code.');
+        toast.error('Invalid room code or room not found.');
       }
     } catch (error) {
       console.error('Failed to join room:', error);

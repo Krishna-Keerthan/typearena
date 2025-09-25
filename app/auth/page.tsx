@@ -81,7 +81,7 @@ export default function TypeFastAuth() {
           toast.error(res.error);
           setErrors({ email: res.error });
         }
-      } catch (err) {
+      } catch {
         toast.error("Something went wrong. Please try again.");
       }
     }

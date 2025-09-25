@@ -46,7 +46,7 @@ export default function Page() {
       }
     }
     fetchRoom()
-  }, [code])
+  }, [code, session?.user.id])
 
   const handleStartRace = () => {
     if (isHost) {

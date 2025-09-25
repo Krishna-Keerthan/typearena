@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { Edit2, Save } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { getUserById, updateUserById } from '@/actions/user';
@@ -20,7 +21,7 @@ const SimpleProfileCard = () => {
   
   const { data: session } = useSession();
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       if (session?.user.id) {
         setIsLoading(true); // Start loading
@@ -35,11 +36,11 @@ const SimpleProfileCard = () => {
     } finally {
       setIsLoading(false); // End loading
     }
-  };
+  }, [session?.user.id]);
 
   useEffect(() => {
     fetchUserData();
-  }, [session]);
+  }, [session, fetchUserData]);
 
   const handleSave = async () => {
     if (!userData || !session?.user.id) {
@@ -75,9 +76,11 @@ const SimpleProfileCard = () => {
                 className="w-16 h-16 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center text-2xl cursor-pointer hover:scale-105 transition-transform mx-auto"
               >
                 {userData?.imageUrl ? (
-                  <img 
+                  <Image 
                     src={userData.imageUrl}
                     alt="Avatar"
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-full object-cover"
                   />
                 ) : (

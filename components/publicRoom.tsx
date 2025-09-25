@@ -32,7 +32,7 @@ const PublicRoom = () => {
       setIsLoading(true);
       try {
         const result = await getRoomByUserId(userId);
-        if (result?.success) {
+        if (result?.success && result.data) {
           setRooms(result.data);
         }
       } catch (error) {
