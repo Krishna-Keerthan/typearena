@@ -76,7 +76,7 @@ export default function Page() {
   }
 
   return (
-    <div className=" text-white flex flex-col pt-20 px-40">
+    <div className=" text-white flex flex-col pt-20 px-20">
 
       {/* Top Bar */}
       <div className="flex justify-between items-center px-6 py-4">
