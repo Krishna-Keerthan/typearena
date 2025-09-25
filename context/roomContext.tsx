@@ -22,17 +22,19 @@ interface RoomContextType {
   } | null;
   participants: Participant[];
   isConnected: boolean;
-  isStartRace:boolean;
+  isStartRace: boolean;
+  setIsStartRace: React.Dispatch<React.SetStateAction<boolean>>;
   raceText: string | null;
   progressByUser: Record<string, number>;
   finishedAtByUser: Record<string, number | null>;
 
   channel: RealtimeChannel | null;
   
-  startRace:(startRace:boolean)=>Promise<void>
+  startRace: (startRace: boolean) => Promise<void>;
+  resetRace: () => Promise<void>;
   joinRoom: (roomId: string, roomName: string, username: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
-  sendMessage: (content: string) => void;
+  sendMessage: (content: string) => Promise<void>;
   sendProgress: (progress: number) => void;
   
 
@@ -83,10 +85,13 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children, supabase }
 
       // Create new channel
       const newChannel = supabase.channel(`room:${roomId}`, {
-        config: { 
-          presence: { 
-            key: username 
-          } 
+        config: {
+          presence: {
+            key: username
+          },
+          broadcast: {
+            self: true
+          }
         },
       });
 
@@ -118,6 +123,16 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children, supabase }
           toast.success('Race started by the host')
         })
 
+        // Handle race reset broadcast
+        .on('broadcast', { event: 'RESET_RACE' }, () => {
+          console.log('[Realtime] RESET_RACE received')
+          setIsStartRace(false)
+          setRaceText(null)
+          setProgressByUser({})
+          setFinishedAtByUser({})
+          toast.info('Race reset by the host')
+        })
+
         // Handle race progress updates
         .on('broadcast', { event: 'RACE_PROGRESS' }, (payload: any) => {
           const u = payload?.payload?.username as string | undefined
@@ -137,13 +152,13 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children, supabase }
         // Handle user join notifications
         .on('broadcast', { event: 'USER_JOINED' }, (payload: any) => {
           console.log('User joined:', payload.payload.username);
-          toast.success(`${payload.payload.username} is joined!`)
+          toast.info(`${payload.payload.username} is joined!`)
         })
 
         // Handle user leave notifications
         .on('broadcast', { event: 'USER_LEFT' }, (payload: any) => {
           console.log('User left:', payload.payload.username);
-          toast.error(`${ payload.payload.username} is left!`)
+          toast.info(`${ payload.payload.username} is left!`)
 
         })
 
@@ -272,6 +287,19 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children, supabase }
     setIsStartRace(true)
   },[ isConnected, channel, username])
 
+  const resetRace = useCallback(async () => {
+    setIsStartRace(false)
+    setRaceText(null)
+    setProgressByUser({})
+    setFinishedAtByUser({})
+    console.log('[Realtime] Sending RESET_RACE')
+    await channel?.send({
+      type: 'broadcast',
+      event: 'RESET_RACE',
+      payload: { resetBy: username }
+    })
+  }, [channel, username])
+
   const sendProgress = useCallback((progress: number) => {
     if (!isConnected || !username) return
     // Update own progress locally so the UI reflects immediately
@@ -305,7 +333,9 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children, supabase }
     sendMessage,
     messages,
     startRace,
+    resetRace,
     isStartRace,
+    setIsStartRace,
     raceText,
     progressByUser,
     finishedAtByUser,

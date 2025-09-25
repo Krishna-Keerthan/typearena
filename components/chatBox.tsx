@@ -37,9 +37,11 @@ const ChatBox = () => {
     <div className="bg-gray-900 rounded-lg p-4 h-[500px] flex flex-col w-[700px]">
       {/* Messages */}
       <div
-        className="flex-1 overflow-y-auto mb-4 p-4 space-y-3 
-                   scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 
-                   hover:scrollbar-thumb-purple-600 rounded-md"
+        className="flex-1 overflow-y-auto p-4 mb-4 [&::-webkit-scrollbar]:w-1
+  [&::-webkit-scrollbar-track]:rounded-full
+  [&::-webkit-scrollbar-track]:bg-gray-100
+  [&::-webkit-scrollbar-thumb]:rounded-full
+  [&::-webkit-scrollbar-thumb]:bg-gray-300"
       >
         {messages.map((msg) => {
           const isOwnMessage = msg.user.name === currentUserName;
