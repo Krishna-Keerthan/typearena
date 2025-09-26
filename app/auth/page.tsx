@@ -19,6 +19,7 @@ type FormErrors = Partial<Record<"name" | "email" | "password", string>>;
 export default function TypeFastAuth() {
   const [activeTab, setActiveTab] = useState("signin");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
@@ -38,6 +39,7 @@ export default function TypeFastAuth() {
     setErrors({});
 
     if (type === "signin") {
+      setIsLoading(true)
       const result = signInSchema.safeParse({
         email: formData.email,
         password: formData.password,
@@ -56,9 +58,12 @@ export default function TypeFastAuth() {
 
       if (res?.ok) {
         toast.success("Login Successful");
-        window.location.reload()
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000);
       } else {
         toast.error(res?.error || "Login Failed");
+        setIsLoading(false)
       }
 
 
@@ -174,10 +179,11 @@ export default function TypeFastAuth() {
 
                   {/* Credentials Sign In */}
                   <Button
+                   disabled={isLoading}
                     onClick={() => handleSubmit("signin")}
                     className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold py-2 rounded-lg transition-colors"
                   >
-                    Sign In →
+                   {isLoading ? ("Sigining..."):(" Sign In →")}
                   </Button>
 
                   {/* Divider */}
