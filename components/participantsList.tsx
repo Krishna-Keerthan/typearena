@@ -16,7 +16,7 @@ const ParticipantsList = () => {
   }
 
   return (
-    <div className="bg-gray-900 rounded-lg p-4 w-[450px]">
+    <div className="bg-gray-900 rounded-lg p-4 w-[350px]">
       <h3 className="text-white font-medium mb-4">
         Participants ({participants.length})
       </h3>

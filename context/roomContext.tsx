@@ -5,6 +5,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { useSession } from 'next-auth/react';
 import { ChatMessage } from '@/hooks/use-realtime-chat';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/client';
 
 interface Participant {
   id: string;
@@ -60,11 +61,11 @@ export const useRoom = () => {
 
 interface RoomProviderProps {
   children: ReactNode;
-  supabase: any; 
 }
 
-export const RoomProvider: React.FC<RoomProviderProps> = ({ children, supabase }) => {
+export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const [currentRoom, setCurrentRoom] = useState<RoomContextType['currentRoom']>(null);
+  const supabase = createClient();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
