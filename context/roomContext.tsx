@@ -99,7 +99,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       // Set up event listeners
       newChannel
         // Handle incoming messages
-        .on('broadcast', { event: 'NEW_MESSAGE' }, (payload: any) => {
+        .on('broadcast', { event: 'NEW_MESSAGE' }, (payload: { payload: ChatMessage }) => {
           const p = payload.payload as ChatMessage
           setMessages(prev => [
             ...prev,
@@ -113,7 +113,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
         })
 
         // Handle race start broadcast
-        .on('broadcast', { event: 'START_RACE' }, (payload: any) => {
+        .on('broadcast', { event: 'START_RACE' }, (payload: { payload?: { text?: string } }) => {
           const text = payload?.payload?.text as string | undefined
           setIsStartRace(true)
           if (text) {
@@ -135,7 +135,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
         })
 
         // Handle race progress updates
-        .on('broadcast', { event: 'RACE_PROGRESS' }, (payload: any) => {
+        .on('broadcast', { event: 'RACE_PROGRESS' }, (payload: { payload?: { username?: string; progress?: number; finishedAt?: number } }) => {
           const u = payload?.payload?.username as string | undefined
           const p = payload?.payload?.progress as number | undefined
           const f = payload?.payload?.finishedAt as number | undefined
@@ -151,13 +151,13 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
         })
 
         // Handle user join notifications
-        .on('broadcast', { event: 'USER_JOINED' }, (payload: any) => {
+        .on('broadcast', { event: 'USER_JOINED' }, (payload: { payload: { username: string } }) => {
           console.log('User joined:', payload.payload.username);
           toast.info(`${payload.payload.username} is joined!`)
         })
 
         // Handle user leave notifications
-        .on('broadcast', { event: 'USER_LEFT' }, (payload: any) => {
+        .on('broadcast', { event: 'USER_LEFT' }, (payload: { payload: { username: string } }) => {
           console.log('User left:', payload.payload.username);
           toast.info(`${ payload.payload.username} is left!`)
 
@@ -166,25 +166,25 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
         // Track presence (who's online)
         .on('presence', { event: 'sync' }, () => {
           const state = newChannel.presenceState();
-          const users = Object.entries(state).map(([key, value]: [string, any]) => ({
+          const users = Object.entries(state).map(([key, value]: [string, unknown]) => ({
             id: key,
             username: key,
-            online_at: value[0]?.online_at || new Date().toISOString(),
-            avatar: value[0]?.avatar,
+            online_at: (value as Array<{ online_at?: string; avatar?: string }>)[0]?.online_at || new Date().toISOString(),
+            avatar: (value as Array<{ online_at?: string; avatar?: string }>)[0]?.avatar,
           }));
           setParticipants(users);
         })
 
-        .on('presence', { event: 'join' }, ({ key, newPresences }: any) => {
+        .on('presence', { event: 'join' }, ({ key }: { key: string; newPresences: unknown }) => {
           console.log('User joined presence:', key);
         })
 
-        .on('presence', { event: 'leave' }, ({ key, leftPresences }: any) => {
+        .on('presence', { event: 'leave' }, ({ key }: { key: string; leftPresences: unknown }) => {
           console.log('User left presence:', key);
         });
 
       // Subscribe to channel
-      const status = await newChannel.subscribe(async (status:any) => {
+      await newChannel.subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') {
           setIsConnected(true);
           
@@ -286,7 +286,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       })
     }
     setIsStartRace(true)
-  },[ isConnected, channel, username])
+  },[channel, username])
 
   const resetRace = useCallback(async () => {
     setIsStartRace(false)
