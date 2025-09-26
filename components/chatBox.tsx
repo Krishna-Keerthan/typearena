@@ -34,7 +34,7 @@ const ChatBox = () => {
   }
 
   return (
-    <div className="bg-gray-900 rounded-lg p-4 h-[500px] flex flex-col w-[700px]">
+    <div className="bg-gray-900 rounded-lg p-4 h-[500px] flex flex-col w-[1000px]">
       {/* Messages */}
       <div
         className="flex-1 overflow-y-auto p-4 mb-4 [&::-webkit-scrollbar]:w-1

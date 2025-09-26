@@ -1,12 +1,10 @@
-'use client'
-import { RoomProvider } from '@/context/roomContext';
-import { createClient } from '@/lib/client';
 
-const supabase = createClient();
+import { RoomProvider } from '@/context/roomContext';
+
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <RoomProvider supabase={supabase}>
+    <RoomProvider>
       {children}
     </RoomProvider>
   );
