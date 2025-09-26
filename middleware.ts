@@ -28,8 +28,5 @@ export const config = {
   matcher: [
     '/',
     '/auth',
-    '/type',
-    '/profile',
-    '/multiplayer/:path*',
   ],
 }
