@@ -1,10 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useSession } from 'next-auth/react';
 import { useRoom } from '@/context/roomContext';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 import DeleteRoomButton from '@/components/room/DeleteRoomButton';
 import JoinRoomButton from '@/components/room/JoinRoomButton';
 
@@ -21,7 +18,6 @@ interface PublicRoomProps {
 }
 
 const PublicRoom = ({ rooms }: PublicRoomProps) => {
-  const { data: session } = useSession();
   const { currentRoom, isConnected } = useRoom();
 
   return (

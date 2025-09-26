@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { User, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { registerUser } from "@/actions/auth";
-import { signIn } from "next-auth/react";
+import { signIn} from "next-auth/react";
 import { toast } from "sonner";
 import { signInSchema, signUpSchema } from "@/types/auth";
 import { useRouter } from "next/navigation";
@@ -53,15 +53,14 @@ export default function TypeFastAuth() {
         password: formData.password,
         redirect: false,
       });
-      
+
       if (res?.ok) {
         toast.success("Login Successful");
-        router.refresh();
-        router.push("/type"); 
+        window.location.reload()
       } else {
         toast.error(res?.error || "Login Failed");
       }
-      
+
 
       if (res) {
         toast.success("Login Successful");
@@ -81,7 +80,7 @@ export default function TypeFastAuth() {
         if (res.success) {
           toast.success("Registration Successful");
           setFormData({ name: "", email: "", password: "" });
-         setActiveTab("signin")
+          setActiveTab("signin")
         }
         if (res.error) {
           toast.error(res.error);
@@ -193,7 +192,7 @@ export default function TypeFastAuth() {
                     onClick={() => signIn("google", { callbackUrl: "/type" })}
                     className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
                   >
-                   <FcGoogle />
+                    <FcGoogle />
                     Sign in with Google
                   </Button>
                 </div>
