@@ -51,7 +51,7 @@ export default function TypeFastAuth() {
       const res = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
-        redirect: false,
+        redirect:false
       });
 
       if (res?.ok) {
