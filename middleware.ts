@@ -1,23 +1,35 @@
-import { withAuth } from "next-auth/middleware"
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+export { default } from 'next-auth/middleware'
+import {getToken} from "next-auth/jwt"
+ 
+// This function can be marked `async` if using `await` inside
+export async function middleware(request: NextRequest) {
+  const token = await getToken({req:request})
+  const url = request.nextUrl
 
-export default withAuth(
-  function middleware(req) {
-        console.log("raw token in middleware", req.nextauth.token);
-    console.log("cookies", req.cookies.getAll());
-  },
-  {
-    pages:{
-      signIn: "/auth", // redirect here instead of /api/auth/signin
-    },
-    callbacks: {
-      authorized: ({ token }) => !!token, 
-    },
+  if (token &&
+    (url.pathname.startsWith('/auth') ||
+      url.pathname === '/')
+   ) {
+    return NextResponse.redirect(new URL('/type', request.url))
   }
-)
 
-// Apply middleware to all routes *except* "/", "/auth", and static files
+  if (!token && (url.pathname.startsWith('/type') || url.pathname.startsWith('/multiplayer') ||url.pathname.startsWith('/profile') )) {
+    return NextResponse.redirect(new URL('/auth', request.url))
+  }
+
+  return NextResponse.next()
+
+}
+ 
+// See "Matching Paths" below to learn more
 export const config = {
   matcher: [
-    "/((?!auth|$|_next|favicon.ico).*)",
+    '/',
+    '/auth',
+    '/type',
+    '/profile',
+    '/multiplayer/:path*',
   ],
 }
