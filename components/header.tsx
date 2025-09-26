@@ -11,8 +11,6 @@ export default function Header() {
 
   const pathname = usePathname();
 
-  console.log(user)
-
   const navigationItems = [
     { name: "Type", href: "/type", icon: <Keyboard /> },
     { name: "Multiplayer", href: "/multiplayer", icon: <Users /> },

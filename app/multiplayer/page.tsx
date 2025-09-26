@@ -2,12 +2,20 @@
 import CreateRoom from '@/components/createRoom';
 import JoinRoom from '@/components/joinRoom';
 import PublicRoom from '@/components/publicRoom';
+import { authOptions } from '@/lib/nextauth-options';
+import prisma from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
 
 const MultiplayerArena  = async () => {
+  const session =await  getServerSession(authOptions)
+  if(!session) return null
+
+  const rooms = await prisma.room.findMany({
+    where:{hostId:session.user.id}
+  })
+
   return (
     <div className="min-h-screen bg-background p-6">
-      
-      
       {/* Main Content */}
       <div className="max-w-6xl mx-auto">
         <h1 className="text-white text-3xl font-bold mb-8">Multiplayer Arena</h1>
@@ -20,7 +28,7 @@ const MultiplayerArena  = async () => {
         
         {/* Public Room Section */}
         <div className="w-full">
-          <PublicRoom />
+          <PublicRoom rooms={rooms}/>
         </div>
       </div>
     </div>

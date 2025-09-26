@@ -51,14 +51,22 @@ export default function TypeFastAuth() {
       const res = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
-        redirect:false
+        redirect: false,
       });
-
+      
       if (res?.ok) {
         toast.success("Login Successful");
-        router.push("/type");
+        router.refresh();
+        router.push("/type"); 
       } else {
         toast.error(res?.error || "Login Failed");
+      }
+      
+
+      if (res) {
+        toast.success("Login Successful");
+      } else {
+        toast.error(res || "Login Failed");
       }
     } else {
       const result = signUpSchema.safeParse(formData);

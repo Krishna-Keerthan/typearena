@@ -1,10 +1,9 @@
 'use client';
 
-import { createRoom } from '@/actions/room';
+import { createRoom, getRoomByUserId } from '@/actions/room';
 import { RoomData } from '@/types/room';
 import { Loader2 } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react'
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -17,7 +16,7 @@ const CreateRoom = () => {
   const { data: session } = useSession()
   const hostId = session?.user.id
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+
 
   const handleCreateRoom = async (roomData: RoomData) => {
     try {
@@ -29,14 +28,13 @@ const CreateRoom = () => {
       }
 
       if (result.success) {
+        setRoomName('')
         toast.success("Room created successfully")
-        router.push(`/multiplayer/room/${result?.data?.code}`)
       }
 
       else {
         toast.error("Failed to created the room")
       }
-      console.log(result)
 
     } catch (error) {
       console.error("Failed to create room:", error);

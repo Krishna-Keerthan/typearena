@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { getRoomByUserId } from '@/actions/room'; 
+import React from 'react';
 import { useSession } from 'next-auth/react';
 import { useRoom } from '@/context/roomContext';
-import { useRouter } from 'next/navigation'; // Import useRouter instead of redirect
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import DeleteRoomButton from '@/components/room/DeleteRoomButton';
+import JoinRoomButton from '@/components/room/JoinRoomButton';
 
-interface PublicRoomData {
+interface Room {
   id: string;
   name: string;
   code: string;
@@ -14,55 +16,13 @@ interface PublicRoomData {
   mondeOption: string;
 }
 
-const PublicRoom = () => {
+interface PublicRoomProps {
+  rooms: Room[];
+}
+
+const PublicRoom = ({ rooms }: PublicRoomProps) => {
   const { data: session } = useSession();
-  const userId = session?.user?.id as string;
-  const username = session?.user?.name || session?.user?.email || 'Anonymous';
-  
-  const { joinRoom, currentRoom, isConnected } = useRoom();
-  const router = useRouter(); 
-
-  const [rooms, setRooms] = useState<PublicRoomData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchRooms = async () => {
-      if (!userId) return;
-      setIsLoading(true);
-      try {
-        const result = await getRoomByUserId(userId);
-        if (result?.success && result.data) {
-          setRooms(result.data);
-        }
-      } catch (error) {
-        console.error('Error fetching rooms:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchRooms();
-  }, [userId]);
-
-  const handleJoinRoom = async (roomId: string, roomName: string, roomCode: string) => {
-    if (!username) {
-      console.error('Username is required to join room');
-      return;
-    }
-
-    setJoiningRoomId(roomId);
-    try {
-      await joinRoom(roomId, roomName, username);
-      console.log('Successfully joined room:', roomName);
-      // Use router.push instead of redirect
-      router.push(`/multiplayer/room/${roomCode}`);
-    } catch (error) {
-      
-      console.error(error)
-    } finally {
-      setJoiningRoomId(null);
-    }
-  };
+  const { currentRoom, isConnected } = useRoom();
 
   return (
     <div className="bg-card border shadow-[inset_0_0_2px_rgba(255,255,255,0.05)] rounded-lg p-6">
@@ -76,11 +36,7 @@ const PublicRoom = () => {
         )}
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-gray-400 text-center">Loading rooms...</p>
-        </div>
-      ) : rooms.length > 0 ? (
+      {rooms.length > 0 ? (
         <div className="space-y-3">
           {rooms.map((room) => (
             <div
@@ -96,20 +52,10 @@ const PublicRoom = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => handleJoinRoom(room.id, room.name, room.code)}
-                disabled={joiningRoomId === room.id || (currentRoom?.id === room.id && isConnected)}
-                className={`px-4 py-2 rounded-md font-medium transition-colors duration-200 ${
-                  currentRoom?.id === room.id && isConnected
-                    ? 'bg-green-600 text-white cursor-not-allowed'
-                    : joiningRoomId === room.id
-                    ? 'bg-gray-600 text-white cursor-not-allowed'
-                    : 'bg-purple-600 hover:bg-purple-700 text-white'
-                }`}
-              >
-                {joiningRoomId === room.id ? 'Joining...' : 
-                 currentRoom?.id === room.id && isConnected ? 'Connected' : 'Join'}
-              </button>
+              <div className="flex gap-3">
+                <JoinRoomButton room={room} />
+                <DeleteRoomButton room={room} />
+              </div>
             </div>
           ))}
         </div>

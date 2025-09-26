@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma"
 import { generateRoomCode } from "@/lib/utils"
 import { RoomData } from "@/types/room"
 import { getServerSession } from "next-auth"
+import { revalidatePath } from "next/cache"
 
 export async function createRoom(roomData: RoomData) {
     const session = getServerSession(authOptions)
@@ -25,7 +26,7 @@ export async function createRoom(roomData: RoomData) {
                 hostId: roomData.hostId
             }
         })
-
+        revalidatePath('/multiplayer')
         return { success: true, data: room }
     } catch (error) {
         console.error("Failed to create the room")
@@ -80,7 +81,27 @@ export async function getRoomByCode(code: string) {
                 hostId:true
             },
         })
+
         return { success: true, data: room }
+    } catch (error) {
+        console.error(error)
+        console.log("Room not found!")
+    }
+}
+
+
+export async function deleteRoomByCode(roomcode:string){
+    const session = getServerSession(authOptions)
+
+    if (!session) {
+        return { success: false, data: null }
+    }
+
+    try {
+        const room = await prisma.room.delete({
+            where:{code:roomcode}
+        })
+        return {success:true, message:"Room deleted"}
     } catch (error) {
         console.error(error)
         console.log("Room not found!")
