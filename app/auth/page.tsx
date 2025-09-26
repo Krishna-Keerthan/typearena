@@ -54,13 +54,11 @@ export default function TypeFastAuth() {
         redirect: false,
       });
 
-      if (res?.status === 200) {
+      if (res?.ok) {
         toast.success("Login Successful");
         router.push("/type");
-      }
-
-      if (result?.error) {
-        toast.error("Login Failed");
+      } else {
+        toast.error(res?.error || "Login Failed");
       }
     } else {
       const result = signUpSchema.safeParse(formData);
