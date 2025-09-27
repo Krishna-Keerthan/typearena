@@ -17,7 +17,7 @@ export async function updateLeaderboard(result: GameResult) {
 
   const earnedPoints = calculatePoints(wpm, accuracy, difficulty);
 
-  const existing = await prisma.leaderBoard.findUnique({
+  const existing = await prisma.leaderBoard.findFirst({
     where: { userId },
   });
 
@@ -25,7 +25,7 @@ export async function updateLeaderboard(result: GameResult) {
 
   if (existing) {
     updatedLeaderboard = await prisma.leaderBoard.update({
-      where: { userId },
+      where: { id: existing.id }, 
       data: {
         points: { increment: earnedPoints },
         difficulty,
@@ -47,6 +47,3 @@ export async function updateLeaderboard(result: GameResult) {
 
   return updatedLeaderboard;
 }
-
-
-

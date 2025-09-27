@@ -1,64 +1,26 @@
 "use client";
-import React, { useEffect, useState, useCallback } from 'react';
-import Image from 'next/image';
-import { Edit2, Save } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { getUserById, updateUserById } from '@/actions/user';
-import SimpleProfileCardSkeleton from './ProfileCardSkeleton';
-
-interface UserData {
-  id: string;
-  name: string;
-  email: string;
-  imageUrl: string | null;
-}
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import { useSession } from "next-auth/react";
+import SimpleProfileCardSkeleton from "./ProfileCardSkeleton";
 
 const SimpleProfileCard = () => {
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState('');
-  const [isLoading, setIsLoading] = useState(true); // Loading state
-  
-  const { data: session } = useSession();
-
-  const fetchUserData = useCallback(async () => {
-    try {
-      if (session?.user.id) {
-        setIsLoading(true); // Start loading
-        const res = await getUserById(session.user.id);
-        if (res) {
-          setUserData(res);
-          setEditedName(res.name);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    } finally {
-      setIsLoading(false); // End loading
-    }
-  }, [session?.user.id]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [image, setImage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    fetchUserData();
-  }, [session, fetchUserData]);
+    if (status === "loading") return;
 
-  const handleSave = async () => {
-    if (!userData || !session?.user.id) {
-      console.error("Cannot save: missing user data or session");
-      return;
+    if (session?.user) {
+      setName(session.user.name || "");
+      setEmail(session.user.email || "");
+      setImage(session.user.image || "");
     }
-
-    try {
-      const updated = await updateUserById(session.user.id, {
-        name: editedName
-      });
-      setUserData((prev) => prev ? { ...prev, name: editedName } : prev);
-      setIsEditing(false);
-      console.log("Saved data:", updated);
-    } catch (error) {
-      console.error("Error saving user data:", error);
-    }
-  };
+    setIsLoading(false);
+  }, [session, status]);
 
   if (isLoading) {
     return <SimpleProfileCardSkeleton />;
@@ -66,25 +28,27 @@ const SimpleProfileCard = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="bg-card rounded-3xl shadow-lg p-8 w-full max-w-md relative border border-gray-700">
+      <div className="bg-card rounded-3xl shadow-lg p-8 w-full max-w-md relative border border-gray-700 overflow-hidden group">
+        {/* Animated glow border */}
+        <div className="absolute inset-0 rounded-3xl border border-primary/20 group-hover:border-primary/40 transition-all duration-500 pointer-events-none" />
 
         {/* Profile Picture Section */}
         <div className="text-center mb-6">
           <div className="relative inline-block">
             <div className="relative mb-4">
-              <div 
-                className="w-16 h-16 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center text-2xl cursor-pointer hover:scale-105 transition-transform mx-auto"
-              >
-                {userData?.imageUrl ? (
-                  <Image 
-                    src={userData.imageUrl}
+              <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center text-2xl mx-auto shadow-md group-hover:scale-105 transition-transform duration-300">
+                {image ? (
+                  <Image
+                    src={image}
                     alt="Avatar"
-                    width={64}
-                    height={64}
-                    className="w-16 h-16 rounded-full object-cover"
+                    width={80}
+                    height={80}
+                    className="w-20 h-20 rounded-full object-cover"
                   />
                 ) : (
-                  <span className="uppercase">{userData?.name.charAt(0)}</span>
+                  <span className="uppercase text-3xl font-bold">
+                    {name.charAt(0) || "?"}
+                  </span>
                 )}
               </div>
             </div>
@@ -92,41 +56,26 @@ const SimpleProfileCard = () => {
         </div>
 
         {/* Name Section */}
-        <div className="text-center mb-4">
-          {isEditing ? (
-            <input
-              type="text"
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
-              className="border border-gray-600 rounded-lg px-3 py-2 w-full text-white bg-card"
-              placeholder="Enter name"
-            />
-          ) : (
-            <h1 className="text-2xl font-bold" style={{color: 'var(--primary)'}}>
-              {userData?.name || 'No Name'}
-            </h1>
-          )}
+        <div className="text-center mb-3">
+          <h1
+            className="text-2xl font-extrabold tracking-wide animate-pulse"
+            style={{ color: "var(--primary)" }}
+          >
+            {name || "No Name"}
+          </h1>
         </div>
 
         {/* Email Section */}
         <div className="text-center mb-6">
-          <p className="text-muted">{userData?.email || 'No Email'}</p>
+          <p className="text-muted text-sm tracking-wide">{email || "No Email"}</p>
         </div>
 
-        {/* Edit / Save Button */}
-        <button
-          className={`w-full ${isEditing ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'} text-black font-semibold py-2 rounded-lg transition-colors flex justify-center items-center gap-1.5 cursor-pointer`}
-          onClick={() => {
-            if (isEditing) {
-              handleSave();
-            } else {
-              setIsEditing(true);
-            }
-          }}
-        >
-          {isEditing ? <Save className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
-          <span>{isEditing ? 'Save' : 'Edit Profile'}</span>
-        </button>
+        {/* Typing tagline */}
+        <div className="text-center">
+          <p className="text-xs italic text-muted  overflow-hidden whitespace-nowrap  pr-2">
+            Keep typing, keep improving 🚀
+          </p>
+        </div>
       </div>
     </div>
   );

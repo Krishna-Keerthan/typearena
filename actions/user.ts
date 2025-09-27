@@ -1,6 +1,5 @@
 "use server"
 import prisma from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
 
 export async function getUserById(userId: string) {
   const user = await prisma.user.findUnique({
@@ -9,26 +8,26 @@ export async function getUserById(userId: string) {
       id: true,
       name: true,
       email: true,
-      imageUrl: true,
+      image: true,
     },
   });
   return user;
 }
 
 
-export async function updateUserById(userId: string, userData: { name: string}) {
-  const updatedUser = await prisma.user.update({
-    where: { id: userId },
-    data: {
-      name: userData.name,
-    },
-    select: {
-      name: true,
-      imageUrl: true,
-    },
-  });
+// export async function updateUserById(userId: string, userData: { name: string}) {
+//   const updatedUser = await prisma.user.update({
+//     where: { id: userId },
+//     data: {
+//       name: userData.name,
+//     },
+//     select: {
+//       name: true,
+//       imageUrl: true,
+//     },
+//   });
 
-  revalidatePath('/profile')
+//   revalidatePath('/profile')
 
-  return updatedUser;
-}
+//   return updatedUser;
+// }

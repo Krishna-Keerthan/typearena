@@ -167,7 +167,7 @@ const TypingTest: React.FC = () => {
   }, [initializeTest]);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-8">
+    <div className="min-h-screen bg-gray-950 text-white p-8 pt-28">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">

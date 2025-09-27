@@ -42,7 +42,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           name: user.name,
           email: user.email,
-          image: user.imageUrl ?? "",
+          image: user.image ?? "",
         };
       },
     }),
@@ -67,15 +67,15 @@ export const authOptions: NextAuthOptions = {
         data: {
           name: googleProfile.name ?? "",
           email: googleProfile.email,
-          imageUrl: googleProfile.picture,
+          image: googleProfile.picture,
           password: null, // allow null in schema
         },
       });
-    } else if (!existingUser.imageUrl) {
+    } else if (!existingUser.image) {
       // ✅ optionally update image if missing
       await prisma.user.update({
         where: { email: googleProfile.email },
-        data: { imageUrl: googleProfile.picture },
+        data: { image: googleProfile.picture },
       });
     }
   }

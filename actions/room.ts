@@ -78,7 +78,8 @@ export async function getRoomByCode(code: string) {
                 name: true,
                 mode: true,
                 mondeOption: true,
-                hostId:true
+                hostId:true,
+                code:true
             },
         })
 
