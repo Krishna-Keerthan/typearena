@@ -4,6 +4,8 @@ import React from 'react';
 import { useRoom } from '@/context/roomContext';
 import DeleteRoomButton from '@/components/room/DeleteRoomButton';
 import JoinRoomButton from '@/components/room/JoinRoomButton';
+import { Copy } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Room {
   id: string;
@@ -18,7 +20,7 @@ interface PublicRoomProps {
 }
 
 const PublicRoom = ({ rooms }: PublicRoomProps) => {
-  const { currentRoom, isConnected } = useRoom();
+  const { currentRoom } = useRoom();
 
   return (
     <div className="bg-card border shadow-[inset_0_0_2px_rgba(255,255,255,0.05)] rounded-lg p-6">
@@ -42,9 +44,17 @@ const PublicRoom = ({ rooms }: PublicRoomProps) => {
               <div className="flex flex-col">
                 <h4 className="text-white font-medium">{room.name}</h4>
                 <div className="flex items-center space-x-4 text-sm text-gray-400">
-                  <span>Code: {room.code}</span>
                   <span className="capitalize">Mode: {room.mode}</span>
                   <span>Option: {room.mondeOption}</span>
+                  <span
+                    className="bg-gray-700 text-white px-3 py-0.5 rounded text-sm font-mono flex items-center gap-1 cursor-pointer hover:bg-gray-600 transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(room.code)
+                      toast.success("Room code copied!")
+                    }}
+                  >
+                    {room.code} <Copy className="w-4 h-4" />
+                  </span>
                 </div>
               </div>
 

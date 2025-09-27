@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { User, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { registerUser } from "@/actions/auth";
 import { signIn} from "next-auth/react";
 import { toast } from "sonner";
 import { signInSchema, signUpSchema } from "@/types/auth";
-import { useRouter } from "next/navigation";
+
 import { FcGoogle } from "react-icons/fc";
 
 type FormErrors = Partial<Record<"name" | "email" | "password", string>>;
@@ -20,7 +20,6 @@ export default function TypeFastAuth() {
   const [activeTab, setActiveTab] = useState("signin");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
     email: "",

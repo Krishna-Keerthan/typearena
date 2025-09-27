@@ -4,10 +4,12 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from 'bcrypt'
 import prisma from '@/lib/prisma'
-import GoogleProvider, { GoogleProfile } from "next-auth/providers/google";
+import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -49,45 +51,11 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-  async signIn({ account, profile }) {
-  if (account?.provider === "google") {
-    const googleProfile = profile as GoogleProfile;
-
-    if (!googleProfile?.email) {
-      throw new Error("Google account is missing an email address.");
-    }
-
-    const existingUser = await prisma.user.findUnique({
-      where: { email: googleProfile.email },
-    });
-
-    if (!existingUser) {
-      // ✅ create new user
-      await prisma.user.create({
-        data: {
-          name: googleProfile.name ?? "",
-          email: googleProfile.email,
-          image: googleProfile.picture,
-          password: null, // allow null in schema
-        },
-      });
-    } else if (!existingUser.image) {
-      // ✅ optionally update image if missing
-      await prisma.user.update({
-        where: { email: googleProfile.email },
-        data: { image: googleProfile.picture },
-      });
-    }
-  }
-
-  return true;
-},
-
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id ?? "";
-        token.name = user.name ?? "";
-        token.email = user.email ?? "";
+        token.id = user.id;
+        token.name = user.name || "";
+        token.email = user.email || "";
         token.picture = user.image;
       }
       return token;
@@ -111,7 +79,7 @@ export const authOptions: NextAuthOptions = {
 
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 7 * 24 * 60 * 60, // 7 Days
   },
 
   secret: process.env.NEXTAUTH_SECRET,

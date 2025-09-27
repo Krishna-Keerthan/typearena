@@ -44,7 +44,7 @@ interface LeaderboardEntry {
   points: number
   user: {
     id: string
-    name: string
+    name: string | null
     updatedAt: Date
   }
 }
