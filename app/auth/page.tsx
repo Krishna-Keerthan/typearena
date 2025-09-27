@@ -47,6 +47,7 @@ export default function TypeFastAuth() {
 
       if (!result.success) {
         toast.error("Please enter valid sign-in data");
+        setIsLoading(false)
         return;
       }
 
@@ -66,12 +67,6 @@ export default function TypeFastAuth() {
         setIsLoading(false)
       }
 
-
-      if (res) {
-        toast.success("Login Successful");
-      } else {
-        toast.error(res || "Login Failed");
-      }
     } else {
       const result = signUpSchema.safeParse(formData);
 
