@@ -41,9 +41,9 @@ const PublicRoom = ({ rooms }: PublicRoomProps) => {
               key={room.id}
               className="bg-gray-900 rounded-lg p-4 flex items-center justify-between hover:bg-gray-800 transition-colors duration-200"
             >
-              <div className="flex flex-col">
+              <div className="flex  gap-2 sm:gap-0 flex-col">
                 <h4 className="text-white font-medium">{room.name}</h4>
-                <div className="flex items-center space-x-4 text-sm text-gray-400">
+                <div className="flex flex-wrap justify-start items-center gap-2 sm:gap-0 space-x-4 text-sm text-gray-400">
                   <span className="capitalize">Mode: {room.mode}</span>
                   <span>Option: {room.mondeOption}</span>
                   <span
@@ -58,7 +58,7 @@ const PublicRoom = ({ rooms }: PublicRoomProps) => {
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <JoinRoomButton room={room} />
                 <DeleteRoomButton room={room} />
               </div>
