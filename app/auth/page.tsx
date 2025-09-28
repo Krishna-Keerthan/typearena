@@ -1,31 +1,34 @@
 "use client";
 
 import React, { useState } from "react";
-import { User, Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Mail, Eye, EyeOff, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { registerUser } from "@/actions/auth";
-import { signIn} from "next-auth/react";
+import { checkUsername, registerUser } from "@/actions/auth";
+import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { signInSchema, signUpSchema } from "@/types/auth";
+import { useDebouncedCallback } from "use-debounce";
 
 import { FcGoogle } from "react-icons/fc";
 
-type FormErrors = Partial<Record<"name" | "email" | "password", string>>;
+type FormErrors = Partial<Record<"username" | "email" | "password", string>>;
 
 export default function TypeFastAuth() {
   const [activeTab, setActiveTab] = useState("signin");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
   });
+  const [usernameStatus, setUsernameStatus] = useState<"available" | "taken" | "checking" | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
+
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -33,6 +36,22 @@ export default function TypeFastAuth() {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
+
+  const debouncedCheckUsername = useDebouncedCallback(async (username: string) => {
+    if (!username.trim()) {
+      setUsernameStatus(null);
+      return;
+    }
+
+    setUsernameStatus("checking");
+    try {
+      const res = await checkUsername(username);
+      setUsernameStatus(res.available ? "available" : "taken");
+    } catch {
+      setUsernameStatus(null);
+    }
+  }, 500);
+
 
   const handleSubmit = async (type: "signin" | "signup") => {
     setErrors({});
@@ -67,10 +86,12 @@ export default function TypeFastAuth() {
       }
 
     } else {
+      setIsLoading(true);
       const result = signUpSchema.safeParse(formData);
 
       if (!result.success) {
         toast.error("Please fill all fields correctly");
+        setIsLoading(false);
         return;
       }
 
@@ -78,18 +99,24 @@ export default function TypeFastAuth() {
         const res = await registerUser(formData);
         if (res.success) {
           toast.success("Registration Successful");
-          setFormData({ name: "", email: "", password: "" });
-          setActiveTab("signin")
+          setFormData({ username: "", email: "", password: "" });
+          setActiveTab("signin");
+          setIsLoading(false);
         }
         if (res.error) {
           toast.error(res.error);
           setErrors({ email: res.error });
+          setIsLoading(false);
         }
       } catch {
         toast.error("Something went wrong. Please try again.");
+        setIsLoading(false);
       }
     }
   };
+
+
+
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center mt-10 px-4">
@@ -173,11 +200,11 @@ export default function TypeFastAuth() {
 
                   {/* Credentials Sign In */}
                   <Button
-                   disabled={isLoading}
+                    disabled={isLoading}
                     onClick={() => handleSubmit("signin")}
                     className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold py-2 rounded-lg transition-colors"
                   >
-                   {isLoading ? ("Sigining..."):(" Sign In →")}
+                    {isLoading ? ("Sigining...") : (" Sign In →")}
                   </Button>
 
                   {/* Divider */}
@@ -209,24 +236,45 @@ export default function TypeFastAuth() {
                   {/* Name */}
                   <div className="space-y-2">
                     <Label htmlFor="signup-name" className="text-gray-300">
-                      Name
+                      Username
                     </Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                       <Input
                         id="signup-name"
                         type="text"
-                        value={formData.name}
-                        onChange={(e) =>
-                          handleInputChange("name", e.target.value)
-                        }
+                        value={formData.username}
+                        onChange={(e) => {
+                          handleInputChange("username", e.target.value);
+                          debouncedCheckUsername(e.target.value);
+                        }}
                         className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500"
-                        placeholder="John Doe"
+                        placeholder="johndoe"
                       />
                     </div>
-                    {errors.name && (
-                      <p className="text-red-400 text-sm">{errors.name}</p>
-                    )}
+                    <div className="mt-4">
+                      {usernameStatus === "checking" && (
+                        <div className="flex items-center gap-2 text-gray-400 text-sm">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Checking...</span>
+                        </div>
+                      )}
+                      {usernameStatus === "available" && (
+                        <div className="flex items-center gap-2 text-green-400 text-sm">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Username available</span>
+                        </div>
+                      )}
+                      {usernameStatus === "taken" && (
+                        <div className="flex items-center gap-2 text-red-400 text-sm">
+                          <XCircle className="w-4 h-4" />
+                          <span>Username already taken</span>
+                        </div>
+                      )}
+                      {errors.username && (
+                        <p className="text-red-400 text-sm">{errors.username}</p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Email */}
@@ -287,10 +335,11 @@ export default function TypeFastAuth() {
                   </div>
 
                   <Button
+                    disabled={isLoading}
                     onClick={() => handleSubmit("signup")}
                     className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold py-2 rounded-lg transition-colors"
                   >
-                    Sign Up →
+                    {isLoading ? "Signing Up..." : "Sign Up →"}
                   </Button>
                 </div>
               </CardContent>
