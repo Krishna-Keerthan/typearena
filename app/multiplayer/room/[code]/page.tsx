@@ -111,7 +111,7 @@ export default function Page() {
                 onClick={handlePlayAgain}
                 className="px-4 py-2 rounded-lg font-semibold text-base transition-all duration-200 hover:shadow-lg bg-purple-600 text-white w-full sm:w-auto"
               >
-                Play again <RotateCcw className="inline-block ml-1" />
+                Play again <RotateCcw className="inline-block h-4 w-4 ml-1" />
               </button>
             )}
 
