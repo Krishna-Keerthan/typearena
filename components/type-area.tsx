@@ -72,8 +72,8 @@ const TypeArea: React.FC<TypeAreaProps> = ({
     const words = currentText.split(' ');
   
     return (
-      <div className="p-4 font-mono text-lg leading-relaxed select-none">
-        <div className="text-xs text-gray-500 uppercase tracking-wider font-sans mb-4">
+      <div className="p-3 sm:p-4 font-mono text-sm sm:text-base lg:text-lg leading-relaxed select-none">
+        <div className="text-xs text-gray-500 uppercase tracking-wider font-sans mb-3 sm:mb-4">
           TYPE THE TEXT BELOW
         </div>
   
@@ -127,23 +127,23 @@ const TypeArea: React.FC<TypeAreaProps> = ({
   
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Text Display Area */}
-      <div className="bg-gray-900 rounded-lg border-2 border-gray-700 min-h-48 relative">
+      <div className="bg-gray-900 rounded-lg border-2 border-gray-700 min-h-36 sm:min-h-48 relative">
         {renderText()}
         
         {/* Status indicator */}
-        <div className="absolute top-4 right-4 flex items-center gap-2">
+        <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2">
           {isActive && !isFinished && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <div className="w-2 h-2 bg-[#00d9b7] rounded-full animate-pulse" />
-              <span className="text-xs text-gray-400 font-sans">TYPING</span>
+              <span className="text-xs text-gray-400 font-sans hidden sm:inline">TYPING</span>
             </div>
           )}
           {isFinished && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className="text-xs text-gray-400 font-sans">COMPLETED</span>
+              <span className="text-xs text-gray-400 font-sans hidden sm:inline">COMPLETED</span>
             </div>
           )}
         </div>
@@ -157,7 +157,7 @@ const TypeArea: React.FC<TypeAreaProps> = ({
           value={userInput}
           onChange={handleInputChange}
           disabled={isFinished}
-          className="w-full p-4 bg-gray-800 border-2 border-gray-700 rounded-lg text-white font-mono text-lg focus:outline-none focus:border-[#00d9b7] transition-all duration-200 placeholder-gray-500"
+          className="w-full p-3 sm:p-4 bg-gray-800 border-2 border-gray-700 rounded-lg text-white font-mono text-sm sm:text-base lg:text-lg focus:outline-none focus:border-[#00d9b7] transition-all duration-200 placeholder-gray-500"
           placeholder={
             isFinished 
               ? "Test completed! Check your results below." 

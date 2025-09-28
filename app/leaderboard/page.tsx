@@ -60,17 +60,17 @@ export default async function Leaderboard() {
   })
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6 mt-20">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-[#e6f1ff] mb-2">Leaderboard</h2>
-        <p className="text-[#8892b0]">Top performers ranked by WPM and points</p>
+    <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 mt-16 sm:mt-20">
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#e6f1ff] mb-2">Leaderboard</h2>
+        <p className="text-sm sm:text-base text-[#8892b0]">Top performers ranked by WPM and points</p>
       </div>
 
       {/* Leaderboard Table */}
       <div className="bg-[#1a1f2e] rounded-xl shadow-xl overflow-hidden border border-[#4fd1c7]/10">
         {/* Table Header */}
-        <div className="bg-[#0f1419] px-6 py-4 border-b border-[#4fd1c7]/20">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 font-semibold text-[#00d9b7] text-sm uppercase tracking-wide">
+        <div className="bg-[#0f1419] px-4 sm:px-6 py-3 sm:py-4 border-b border-[#4fd1c7]/20">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 font-semibold text-[#00d9b7] text-xs sm:text-sm uppercase tracking-wide">
             <div className="flex items-center">Rank</div>
             <div className="flex items-center">Name</div>
             <div className="hidden md:flex items-center">WPM</div>
@@ -86,15 +86,15 @@ export default async function Leaderboard() {
             return (
               <div
                 key={user.id}
-                className={`px-6 py-4 transition-all duration-200 hover:bg-[#22d3ee]/5 ${
+                className={`px-4 sm:px-6 py-3 sm:py-4 transition-all duration-200 hover:bg-[#22d3ee]/5 ${
                   index % 2 === 0 ? "bg-[#1a1f2e]" : "bg-[#0f1419]/50"
                 }`}
               >
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-center">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 items-center">
                   {/* Rank */}
                   <div className="flex items-center">
                     <span
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${getRankBadge(rank)}`}
+                      className={`inline-flex items-center justify-center w-7 sm:w-8 h-7 sm:h-8 rounded-full text-xs sm:text-sm font-bold ${getRankBadge(rank)}`}
                     >
                       {rank}
                     </span>
@@ -102,7 +102,7 @@ export default async function Leaderboard() {
 
                   {/* Username */}
                   <div className="flex items-center">
-                    <span className="font-medium text-[#e6f1ff] truncate">
+                    <span className="font-medium text-[#e6f1ff] truncate text-sm sm:text-base">
                       {user.user.username}
                     </span>
                   </div>
@@ -111,12 +111,6 @@ export default async function Leaderboard() {
                   <div className="hidden md:flex items-center">
                     <span className="text-[#4fd1c7] font-semibold">{user.wpm}</span>
                   </div>
-                  {/* Difficulty */}
-                  {/* <div className="hidden md:flex items-center">
-                    <span className={getDifficultyBadge(user.difficulty)}>
-                      {user.difficulty.charAt(0).toUpperCase() + user.difficulty.slice(1)}
-                    </span>
-                  </div> */}
 
                   {/* Points */}
                   <div className="hidden md:flex items-center">
@@ -132,10 +126,15 @@ export default async function Leaderboard() {
                 </div>
 
                 {/* Mobile-only additional info */}
-                <div className="md:hidden mt-3 pt-3 border-t border-[#4fd1c7]/10 flex justify-between text-sm text-[#8892b0]">
-                  <span>WPM: <span className="text-[#4fd1c7] font-semibold">{user.wpm}</span></span>
-                  <span>Points: <span className="text-[#e6f1ff]">{user.points}</span></span>
-                  <span>Difficulty: <span className={getDifficultyBadge(user.difficulty)}>{user.difficulty.charAt(0).toUpperCase() + user.difficulty.slice(1)}</span></span>
+                <div className="md:hidden mt-3 pt-3 border-t border-[#4fd1c7]/10 space-y-2">
+                  <div className="flex justify-between items-center text-xs sm:text-sm text-[#8892b0]">
+                    <span>WPM: <span className="text-[#4fd1c7] font-semibold">{user.wpm}</span></span>
+                    <span>Points: <span className="text-[#e6f1ff] font-semibold">{user.points}</span></span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs text-[#8892b0]">
+                    <span>Difficulty: <span className={getDifficultyBadge(user.difficulty)}>{user.difficulty.charAt(0).toUpperCase() + user.difficulty.slice(1)}</span></span>
+                    <span className="text-[#8892b0]">{displayDate(user.user.updatedAt)}</span>
+                  </div>
                 </div>
               </div>
             )
@@ -143,8 +142,8 @@ export default async function Leaderboard() {
         </div>
 
         {/* Footer */}
-        <div className="bg-[#0f1419] px-6 py-4 border-t border-[#4fd1c7]/20">
-          <div className="flex justify-between items-center text-sm text-[#8892b0]">
+        <div className="bg-[#0f1419] px-4 sm:px-6 py-3 sm:py-4 border-t border-[#4fd1c7]/20">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs sm:text-sm text-[#8892b0]">
             <span>Showing {leaderboard.length} users</span>
             <span>Updated just now</span>
           </div>

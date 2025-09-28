@@ -119,39 +119,39 @@ export default function TypeFastAuth() {
 
 
   return (
-    <div className="min-h-screen bg-background text-white flex items-center justify-center sm:mt-5 px-4">
-      <div className="bg-card border border-gray-800 rounded-xl w-[30rem] shadow-sm py-5 px-5  sm:py-6 sm:px-10">
-        <div className="text-center mb-8">
-          <h1 className="text-xl sm:text-3xl font-bold mb-2">Welcome to TypeFast</h1>
-          <p className="text-gray-400">
+    <div className="min-h-screen bg-background text-white flex items-center justify-center px-4 py-8">
+      <div className="bg-card border border-gray-800 rounded-xl w-full max-w-md sm:max-w-lg shadow-sm py-4 px-4 sm:py-6 sm:px-8">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">Welcome to TypeFast</h1>
+          <p className="text-gray-400 text-sm sm:text-base">
             Sign in to your account
           </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-card border border-gray-800">
+          <TabsList className="grid w-full grid-cols-2 bg-card border border-gray-800 h-10 sm:h-12">
             <TabsTrigger
               value="signin"
-              className="data-[state=active]:bg-gray-800 data-[state=active]:text-white"
+              className="data-[state=active]:bg-gray-800 data-[state=active]:text-white text-sm sm:text-base"
             >
               Sign In
             </TabsTrigger>
             <TabsTrigger
               value="signup"
-              className="data-[state=active]:bg-gray-800 data-[state=active]:text-white"
+              className="data-[state=active]:bg-gray-800 data-[state=active]:text-white text-sm sm:text-base"
             >
               Sign Up
             </TabsTrigger>
           </TabsList>
 
           {/* Sign In */}
-          <TabsContent value="signin" className="mt-6">
+          <TabsContent value="signin" className="mt-4 sm:mt-6">
             <Card className="bg-card border-gray-800">
-              <CardContent className="pt-6">
-                <div className="space-y-4">
+              <CardContent className="pt-4 sm:pt-6">
+                <div className="space-y-3 sm:space-y-4">
                   {/* Email */}
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email" className="text-gray-300">
+                  <div className="space-y-1 sm:space-y-2">
+                    <Label htmlFor="signin-email" className="text-gray-300 text-sm sm:text-base">
                       Email
                     </Label>
                     <div className="relative">
@@ -161,7 +161,7 @@ export default function TypeFastAuth() {
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleInputChange("email", e.target.value)}
-                        className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500"
+                        className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500 h-10 sm:h-11 text-sm sm:text-base"
                         placeholder="john@gmail.com"
                       />
                     </div>
@@ -171,8 +171,8 @@ export default function TypeFastAuth() {
                   </div>
 
                   {/* Password */}
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password" className="text-gray-300">
+                  <div className="space-y-1 sm:space-y-2">
+                    <Label htmlFor="signin-password" className="text-gray-300 text-sm sm:text-base">
                       Password
                     </Label>
                     <div className="relative">
@@ -182,7 +182,7 @@ export default function TypeFastAuth() {
                         type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(e) => handleInputChange("password", e.target.value)}
-                        className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500"
+                        className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500 h-10 sm:h-11 text-sm sm:text-base"
                         placeholder="••••••••"
                       />
                       <button
@@ -202,24 +202,24 @@ export default function TypeFastAuth() {
                   <Button
                     disabled={isLoading}
                     onClick={() => handleSubmit("signin")}
-                    className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold py-2 rounded-lg transition-colors"
+                    className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold py-2.5 sm:py-3 rounded-lg transition-colors text-sm sm:text-base h-10 sm:h-11"
                   >
                     {isLoading ? ("Sigining...") : (" Sign In →")}
                   </Button>
 
                   {/* Divider */}
-                  <div className="flex items-center my-4">
+                  <div className="flex items-center my-3 sm:my-4">
                     <div className="flex-grow h-px bg-gray-700"></div>
-                    <span className="px-3 text-gray-400 text-sm">OR</span>
+                    <span className="px-3 text-gray-400 text-xs sm:text-sm">OR</span>
                     <div className="flex-grow h-px bg-gray-700"></div>
                   </div>
 
                   {/* Google Sign In */}
                   <Button
                     onClick={() => signIn("google", { callbackUrl: "/type" })}
-                    className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-2.5 sm:py-3 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base h-10 sm:h-11"
                   >
-                    <FcGoogle />
+                    <FcGoogle className="text-lg sm:text-xl" />
                     Sign in with Google
                   </Button>
                 </div>
@@ -229,13 +229,13 @@ export default function TypeFastAuth() {
 
 
           {/* Sign Up */}
-          <TabsContent value="signup" className="mt-6">
+          <TabsContent value="signup" className="mt-4 sm:mt-6">
             <Card className="bg-gray-900 border-gray-800">
-              <CardContent className="pt-6">
-                <div className="space-y-4">
+              <CardContent className="pt-4 sm:pt-6">
+                <div className="space-y-3 sm:space-y-4">
                   {/* Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name" className="text-gray-300">
+                  <div className="space-y-1 sm:space-y-2">
+                    <Label htmlFor="signup-name" className="text-gray-300 text-sm sm:text-base">
                       Username
                     </Label>
                     <div className="relative">
@@ -248,11 +248,11 @@ export default function TypeFastAuth() {
                           handleInputChange("username", e.target.value);
                           debouncedCheckUsername(e.target.value);
                         }}
-                        className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500"
+                        className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500 h-10 sm:h-11 text-sm sm:text-base"
                         placeholder="johndoe"
                       />
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-3 sm:mt-4">
                       {usernameStatus === "checking" && (
                         <div className="flex items-center gap-2 text-gray-400 text-sm">
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -278,8 +278,8 @@ export default function TypeFastAuth() {
                   </div>
 
                   {/* Email */}
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-gray-300">
+                  <div className="space-y-1 sm:space-y-2">
+                    <Label htmlFor="signup-email" className="text-gray-300 text-sm sm:text-base">
                       Email
                     </Label>
                     <div className="relative">
@@ -291,7 +291,7 @@ export default function TypeFastAuth() {
                         onChange={(e) =>
                           handleInputChange("email", e.target.value)
                         }
-                        className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500"
+                        className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500 h-10 sm:h-11 text-sm sm:text-base"
                         placeholder="john@gmail.com"
                       />
                     </div>
@@ -301,8 +301,8 @@ export default function TypeFastAuth() {
                   </div>
 
                   {/* Password */}
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-gray-300">
+                  <div className="space-y-1 sm:space-y-2">
+                    <Label htmlFor="signup-password" className="text-gray-300 text-sm sm:text-base">
                       Password
                     </Label>
                     <div className="relative">
@@ -314,7 +314,7 @@ export default function TypeFastAuth() {
                         onChange={(e) =>
                           handleInputChange("password", e.target.value)
                         }
-                        className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500"
+                        className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500 h-10 sm:h-11 text-sm sm:text-base"
                         placeholder="••••••••"
                       />
                       <button
@@ -337,7 +337,7 @@ export default function TypeFastAuth() {
                   <Button
                     disabled={isLoading}
                     onClick={() => handleSubmit("signup")}
-                    className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold py-2 rounded-lg transition-colors"
+                    className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold py-2.5 sm:py-3 rounded-lg transition-colors text-sm sm:text-base h-10 sm:h-11"
                   >
                     {isLoading ? "Signing Up..." : "Sign Up →"}
                   </Button>
