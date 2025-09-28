@@ -3,8 +3,8 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 
-export async function registerUser({ name, email, password }: { 
-  name: string; 
+export async function registerUser({ username, email, password }: { 
+  username: string; 
   email: string; 
   password: string;
 }) {
@@ -23,7 +23,7 @@ export async function registerUser({ name, email, password }: {
     // Create user
     const user = await prisma.user.create({
       data: {
-        name,
+        username,
         email,
         password: hashedPassword,
       },
@@ -35,3 +35,15 @@ export async function registerUser({ name, email, password }: {
     return { error: "Something went wrong" };
   }
 }
+
+
+export async function checkUsername(username: string) {
+  if (!username) return { available: false };
+
+  const existing = await prisma.user.findUnique({
+    where: {  username },
+  });
+
+  return { available: !existing };
+}
+
