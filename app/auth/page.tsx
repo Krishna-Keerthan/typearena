@@ -119,7 +119,7 @@ export default function TypeFastAuth() {
 
 
   return (
-    <div className="min-h-screen bg-background text-white flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-background text-white flex items-center justify-center sm:mt-10 px-4 py-8">
       <div className="bg-card border border-gray-800 rounded-xl w-full max-w-md sm:max-w-lg shadow-sm py-4 px-4 sm:py-6 sm:px-8">
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">Welcome to TypeFast</h1>
