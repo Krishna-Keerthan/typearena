@@ -83,9 +83,9 @@ const Race: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-row-reverse gap-4 space-y-6">
+    <div className="flex flex-row-reverse  flex-wrap sm:flex-nowrap gap-4 space-y-6">
       {/* Progress leaderboard */}
-      <div className="bg-gray-900 rounded-lg p-4 w-[50%]">
+      <div className="bg-gray-900 rounded-lg p-4 w-[500px]">
         <h3 className="text-white font-medium mb-3">Live Progress</h3>
         <div className="space-y-3">
           {sortedProgress.map(({ username, progress }) => {

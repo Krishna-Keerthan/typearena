@@ -34,7 +34,7 @@ const ChatBox = () => {
   }
 
   return (
-    <div className="bg-gray-900 rounded-lg p-4 h-[500px] flex flex-col w-[1000px]">
+    <div className="bg-gray-900 rounded-lg p-4 h-[500px] flex flex-col w-full  ">
       {/* Messages */}
       <div
         className="flex-1 overflow-y-auto p-4 mb-4 [&::-webkit-scrollbar]:w-1
@@ -57,10 +57,9 @@ const ChatBox = () => {
             >
               <div
                 className={`max-w-xs px-3 py-2 rounded-lg text-sm shadow 
-                  ${
-                    isOwnMessage
-                      ? 'bg-purple-600 text-white rounded-br-none'
-                      : 'bg-gray-800 text-gray-100 rounded-bl-none'
+                  ${isOwnMessage
+                    ? 'bg-purple-600 text-white rounded-br-none'
+                    : 'bg-gray-800 text-gray-100 rounded-bl-none'
                   }`}
               >
                 {!isOwnMessage && (
@@ -71,9 +70,8 @@ const ChatBox = () => {
                 {msg.content}
               </div>
               <span
-                className={`text-xs text-gray-400 mt-1 ${
-                  isOwnMessage ? 'text-right' : 'text-left'
-                }`}
+                className={`text-xs text-gray-400 mt-1 ${isOwnMessage ? 'text-right' : 'text-left'
+                  }`}
               >
                 {time}
               </span>
@@ -84,7 +82,7 @@ const ChatBox = () => {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSendMessage} className="flex gap-2">
+      <form onSubmit={handleSendMessage} className="flex flex-wrap sm:flex-nowrap gap-2">
         <input
           type="text"
           value={messageInput}
@@ -96,7 +94,7 @@ const ChatBox = () => {
         <button
           type="submit"
           disabled={!messageInput.trim() || !isConnected}
-          className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md"
+          className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white w-full sm:w-fit px-4 py-2 rounded-md"
         >
           Send
         </button>
