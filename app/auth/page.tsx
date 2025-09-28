@@ -119,8 +119,8 @@ export default function TypeFastAuth() {
 
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center mt-10 px-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-xl w-[30rem] shadow-sm py-5 px-5  sm:py-10 sm:px-10">
+    <div className="min-h-screen bg-background text-white flex items-center justify-center sm:mt-5 px-4">
+      <div className="bg-card border border-gray-800 rounded-xl w-[30rem] shadow-sm py-5 px-5  sm:py-6 sm:px-10">
         <div className="text-center mb-8">
           <h1 className="text-xl sm:text-3xl font-bold mb-2">Welcome to TypeFast</h1>
           <p className="text-gray-400">
@@ -129,7 +129,7 @@ export default function TypeFastAuth() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-gray-900 border border-gray-800">
+          <TabsList className="grid w-full grid-cols-2 bg-card border border-gray-800">
             <TabsTrigger
               value="signin"
               className="data-[state=active]:bg-gray-800 data-[state=active]:text-white"
@@ -146,7 +146,7 @@ export default function TypeFastAuth() {
 
           {/* Sign In */}
           <TabsContent value="signin" className="mt-6">
-            <Card className="bg-gray-900 border-gray-800">
+            <Card className="bg-card border-gray-800">
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   {/* Email */}
