@@ -44,7 +44,7 @@ interface LeaderboardEntry {
   points: number
   user: {
     id: string
-    username: string | null
+    name: string | null
     updatedAt: Date
   }
 }
@@ -103,7 +103,7 @@ export default async function Leaderboard() {
                   {/* Username */}
                   <div className="flex items-center">
                     <span className="font-medium text-[#e6f1ff] truncate text-sm sm:text-base">
-                      {user.user.username}
+                      {user.user.name}
                     </span>
                   </div>
 
