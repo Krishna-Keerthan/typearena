@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRoom } from '@/context/roomContext';
 import TypeArea from '@/components/type-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Medal } from "lucide-react";
+
 
 function clamp(n: number, min = 0, max = 100) { return Math.max(min, Math.min(max, n)); }
 
@@ -88,37 +90,61 @@ const Race: React.FC = () => {
       <div className="bg-gray-900 rounded-lg p-4 w-full sm:w-[500px]">
         <h3 className="text-white font-medium mb-3">Live Progress</h3>
         <div className="space-y-3">
-          {sortedProgress.map(({ username, progress }) => {
-            const letter = (username?.charAt(0) || '?').toUpperCase()
-            const colors = [
-              'bg-rose-600','bg-pink-600','bg-fuchsia-600','bg-purple-600','bg-violet-600',
-              'bg-indigo-600','bg-blue-600','bg-sky-600','bg-cyan-600','bg-teal-600',
-              'bg-emerald-600','bg-green-600','bg-lime-600','bg-yellow-600','bg-amber-600',
-              'bg-orange-600','bg-red-600','bg-stone-600','bg-zinc-600','bg-slate-600'
-            ]
-            let hash = 0
-            for (let i = 0; i < username.length; i++) hash = (hash * 31 + username.charCodeAt(i)) >>> 0
-            const color = colors[hash % colors.length]
-            return (
-              <div key={username} className="space-y-1">
-                <div className="flex items-center justify-between text-xs text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="size-6">
-                      <AvatarFallback className={`${color} text-white text-[10px] font-semibold`}>{letter}</AvatarFallback>
-                    </Avatar>
-                    <span className="text-gray-300 text-sm">{username}</span>
-                  </div>
-                  <span className="text-gray-300 text-sm">{progress}%</span>
-                </div>
-                <div className="w-full h-2 bg-gray-800 rounded">
-                  <div
-                    className="h-2 bg-purple-600 rounded"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-            )
-          })}
+
+{sortedProgress.map(({ username, progress }, index) => {
+  const letter = (username?.charAt(0) || '?').toUpperCase();
+  const colors = [
+    'bg-rose-600','bg-pink-600','bg-fuchsia-600','bg-purple-600','bg-violet-600',
+    'bg-indigo-600','bg-blue-600','bg-sky-600','bg-cyan-600','bg-teal-600',
+    'bg-emerald-600','bg-green-600','bg-lime-600','bg-yellow-600','bg-amber-600',
+    'bg-orange-600','bg-red-600','bg-stone-600','bg-zinc-600','bg-slate-600'
+  ];
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) {
+    hash = (hash * 31 + username.charCodeAt(i)) >>> 0;
+  }
+  const color = colors[hash % colors.length];
+
+  // Badge styling for top 3
+  const badgeStyles = [
+    "bg-yellow-400 text-yellow-900",  // 🥇 Gold
+    "bg-gray-300 text-gray-800",      // 🥈 Silver
+    "bg-amber-700 text-white",        // 🥉 Bronze
+  ];
+
+  return (
+    <div key={username} className="space-y-1">
+      <div className="flex items-center justify-between text-xs text-gray-400">
+        <div className="flex items-center gap-2">
+          <Avatar className="size-6">
+            <AvatarFallback className={`${color} text-white text-[10px] font-semibold`}>
+              {letter}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-gray-300 text-sm flex items-center gap-2">
+            {username}
+            {index < 3 && (
+              <span
+                className={`flex items-center justify-center rounded-full w-5 h-5 ${badgeStyles[index]}`}
+              >
+                <Medal size={14} strokeWidth={2.5} />
+              </span>
+            )}
+          </span>
+        </div>
+        <span className="text-gray-300 text-sm">{progress}%</span>
+      </div>
+      <div className="w-full h-2 bg-gray-800 rounded">
+        <div
+          className="h-2 bg-purple-600 rounded"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  );
+})}
+
+
           {sortedProgress.length === 0 && (
             <div className="text-gray-500 text-sm">Waiting for participants...</div>
           )}
