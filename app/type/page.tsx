@@ -106,7 +106,7 @@ const TypingTest: React.FC = () => {
 
     const value = e.target.value;
     setUserInput(value);
-    
+
     // Increment total characters typed (for accuracy calculation)
     if (value.length > userInput.length) {
       setTotalChars(prev => prev + 1);
@@ -114,35 +114,37 @@ const TypingTest: React.FC = () => {
 
     const words = currentText.split(' ');
     const currentWord = words[currentWordIndex] || '';
-    
+
     // Check if user completed a word (pressed space)
     if (value.endsWith(' ')) {
       const typedWord = value.trim();
-      
-      // Check for errors in the completed word
-      if (typedWord !== currentWord) {
-        setErrors(prev => prev + 1);
-      }
-      
-      // Move to next word
-      setWordsCompleted(prev => prev + 1);
-      setCurrentWordIndex(prev => prev + 1);
-      setCurrentCharIndex(0);
-      setUserInput('');
-      
-      // Check if all words are completed
-      if (wordsCompleted + 1 >= preferences.words) {
-        finishTest();
-        return;
-      }
+      // Only proceed if the user actually typed something (not just spaces)
+      if (typedWord.length > 0) {
+        // Check for errors in the completed word
+        if (typedWord !== currentWord) {
+          setErrors(prev => prev + 1);
+        }
+
+        // Move to next word
+        setWordsCompleted(prev => prev + 1);
+        setCurrentWordIndex(prev => prev + 1);
+        setCurrentCharIndex(0);
+        setUserInput('');
+
+        // Check if all words are completed
+        if (wordsCompleted + 1 >= preferences.words) {
+          finishTest();
+          return;
+        }
+      } // else: ignore space if nothing was typed
     } else {
       // Update character index for current word
       setCurrentCharIndex(value.length);
-      
+
       // Check for character-level errors
       const currentChar = currentWord[value.length - 1];
       const typedChar = value[value.length - 1];
-      
+
       if (typedChar && currentChar && typedChar !== currentChar) {
         setErrors(prev => prev + 1);
       }
