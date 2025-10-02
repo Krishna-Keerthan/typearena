@@ -1,71 +1,68 @@
-"use client";
 import React from 'react';
-import { Zap, Users, BarChart3, Settings, Minimize2} from 'lucide-react';
+import { Zap, Users, BarChart3, Settings, Minimize2 } from 'lucide-react';
 import { Highlighter } from "@/components/ui/highlighter";
-
 import Footer from '@/components/footer';
 import Link from 'next/link';
-  const features = [
-    {
-      icon: <Zap className="w-8 h-8 text-[var(--primary)]" />,
-      title: 'Real-time',
-      subtitle: 'Feedback',
-      description: 'Get instant feedback on your typing speed and accuracy'
-    },
-    {
-      icon: <Users className="w-8 h-8 text-[var(--secondary)]" />,
-      title: 'Challenge',
-      subtitle: 'Friends',
-      description: 'Compete with friends in real-time typing races'
-    },
-    {
-      icon: <BarChart3 className="w-8 h-8 text-[var(--accent)]" />,
-      title: 'Detailed',
-      subtitle: 'Statistics',
-      description: 'Track progress over time with comprehensive stats'
-    },
-    {
-      icon: <Settings className="w-8 h-8 text-[var(--primary)]" />,
-      title: 'Customizable',
-      subtitle: 'Options',
-      description: 'Personalize your typing experience with various settings'
-    },
-    {
-      icon: <Minimize2 className="w-8 h-8 text-[var(--secondary)]" />,
-      title: 'Minimalist',
-      subtitle: 'Interface',
-      description: 'Clean, distraction-free design for focused practice'
-    }
-  ];
 
- export default function Page() {
+const features = [
+  {
+    icon: <Zap className="w-8 h-8 text-[var(--primary)]" />,
+    title: 'Real-time',
+    subtitle: 'Feedback',
+    description: 'Get instant feedback on your typing speed and accuracy'
+  },
+  {
+    icon: <Users className="w-8 h-8 text-[var(--secondary)]" />,
+    title: 'Challenge',
+    subtitle: 'Friends',
+    description: 'Compete with friends in real-time typing races'
+  },
+  {
+    icon: <BarChart3 className="w-8 h-8 text-[var(--accent)]" />,
+    title: 'Detailed',
+    subtitle: 'Statistics',
+    description: 'Track progress over time with comprehensive stats'
+  },
+  {
+    icon: <Settings className="w-8 h-8 text-[var(--primary)]" />,
+    title: 'Customizable',
+    subtitle: 'Options',
+    description: 'Personalize your typing experience with various settings'
+  },
+  {
+    icon: <Minimize2 className="w-8 h-8 text-[var(--secondary)]" />,
+    title: 'Minimalist',
+    subtitle: 'Interface',
+    description: 'Clean, distraction-free design for focused practice'
+  }
+];
+
+export default function Page() {
   return (
-        <div className="min-h-screen w-full bg-background pt-20">
-         
-         {/* Main Content */}
-          
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div className="min-h-screen w-full bg-background pt-20">
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Hero Section */}
         <div className="text-center mb-12 sm:mb-16">
           <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight text-[var(--text)] px-2">
             Master Your Typing Skills
             <br className="hidden sm:block" />
             <span className="sm:hidden"> </span>with{' '}
-              <Highlighter  action="underline" color="#00d9b7">
+            <Highlighter action="underline" color="#00d9b7">
               TypeFast
-              </Highlighter>
+            </Highlighter>
           </h1>
-          
+
           <p className="text-sm sm:text-base md:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed text-[var(--textMuted)] px-4">
-            Practice typing, challenge friends, and track improvements with 
+            Practice typing, challenge friends, and track improvements with
             real-time stats in a sleek, minimalist interface
           </p>
 
-         <Link href={'/auth'}>
-         <button className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-200 hover:scale-105 hover:shadow-lg bg-[var(--primary)] hover:bg-[var(--primaryHover)] text-white">
-            Start Typing Now →
-          </button>
-         </Link>
+          <Link href={'/auth'}>
+            <button className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-200 hover:scale-105 hover:shadow-lg bg-[var(--primary)] hover:bg-[var(--primaryHover)] text-white">
+              Start Typing Now →
+            </button>
+          </Link>
         </div>
 
         {/* Why Choose TypeFast Section */}
@@ -133,7 +130,7 @@ import Link from 'next/link';
                 Active Typists
               </div>
             </div>
-            
+
             <div className="p-4 sm:p-6 rounded-xl bg-card">
               <div className="text-2xl sm:text-3xl font-bold mb-2 text-[var(--secondary)]">
                 1M+
@@ -142,7 +139,7 @@ import Link from 'next/link';
                 Tests Completed
               </div>
             </div>
-            
+
             <div className="p-4 sm:p-6 rounded-xl bg-card">
               <div className="text-2xl sm:text-3xl font-bold mb-2 text-[var(--accent)]">
                 120 WPM
@@ -153,9 +150,9 @@ import Link from 'next/link';
             </div>
           </div>
         </div>
-        <Footer/>
+        <Footer />
       </main>
-      </div>
-  
-          );
-        }
+    </div>
+
+  );
+}

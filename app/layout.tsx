@@ -26,15 +26,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <AuthProvider>
-        <body
-          className={`${geistMono.variable} ${geistMono.variable} antialiased`}
-        >
+      <body
+        className={`${geistMono.variable} ${geistMono.variable} antialiased`}
+      >
+        <AuthProvider>
           <Header />
           {children}
           <Sonner richColors expand={true} position="bottom-right" />
-        </body>
-      </AuthProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }
