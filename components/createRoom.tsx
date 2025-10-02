@@ -1,6 +1,6 @@
 'use client';
 
-import { createRoom, getRoomByUserId } from '@/actions/room';
+import { createRoom } from '@/actions/room';
 import { RoomData } from '@/types/room';
 import { Loader2 } from 'lucide-react';
 import { useSession } from 'next-auth/react'

@@ -226,14 +226,14 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           payload: { username: username, roomId: currentRoom.id }
         });
 
-        
         await channel.unsubscribe();
-        
+
         // Reset state
         setChannel(null);
         setCurrentRoom(null);
+        setParticipants([]);
         setIsConnected(false);
-        
+
         toast.success('Left room successfully');
       } catch (error) {
         console.error('Error leaving room:', error);
