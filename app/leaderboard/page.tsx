@@ -53,7 +53,7 @@ interface LeaderboardEntry {
 export default async function Leaderboard() {
 
   const leaderboard: LeaderboardEntry[] = await prisma.leaderBoard.findMany({
-    take: 20,
+    take: 10,
     orderBy: [
       { points: "desc" }
     ],
