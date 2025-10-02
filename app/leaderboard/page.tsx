@@ -60,9 +60,6 @@ export default async function Leaderboard() {
     include: { user: true},
   })
 
-
-  console.log('Total records fetched:', leaderboard.length)
-  console.log('Records:', leaderboard)
   return (
     <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 mt-16 sm:mt-20">
       <div className="mb-6 sm:mb-8">
