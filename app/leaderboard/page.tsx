@@ -1,6 +1,10 @@
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 import prisma from "@/lib/prisma"
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination"
+import { redirect } from "next/navigation"
+
+const PAGE_SIZE = 10
 
 const displayDate = (date: Date) => {
   return new Date(date).toLocaleDateString("en-US", {
@@ -50,14 +54,21 @@ interface LeaderboardEntry {
   }
 }
 
-export default async function Leaderboard() {
+export default async function Leaderboard({ searchParams }: { searchParams?: Promise<{ page?: string }> }) {
+  const page = Math.max(1, Number((await searchParams)?.page) || 1)
+  const skip = (page - 1) * PAGE_SIZE
+
+  const totalCount = await prisma.leaderBoard.count()
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  if (page > totalPages && totalPages > 0) redirect(`/leaderboard?page=${totalPages}`)
 
   const leaderboard: LeaderboardEntry[] = await prisma.leaderBoard.findMany({
-    take: 10,
+    skip,
+    take: PAGE_SIZE,
     orderBy: [
       { points: "desc" }
     ],
-    include: { user: true},
+    include: { user: true },
   })
 
   return (
@@ -83,7 +94,7 @@ export default async function Leaderboard() {
         {/* Table Body */}
         <div className="divide-y divide-[#4fd1c7]/10">
           {leaderboard.map((user, index) => {
-            const rank = index + 1
+            const rank = skip + index + 1
             return (
               <div
                 key={user.id}
@@ -150,6 +161,42 @@ export default async function Leaderboard() {
           </div>
         </div>
       </div>
+        {/* Pagination */}
+        <div className="flex justify-center  py-6">
+          <Pagination>
+            <PaginationContent className="flex gap-4">
+              <PaginationItem>
+                <PaginationPrevious 
+                  href={`?page=${page - 1}`}
+                  className={`bg-secondary text-[#ffffff] ${page === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                  aria-disabled={page === 1}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    href={`?page=${i + 1}`}
+                    isActive={page === i + 1}
+                    className={
+                      page === i + 1
+                        ? 'border-[#4fd1c7] text-[#00d9b7] bg-[#1a1f2e]'
+                        : 'text-[#8892b0] bg-[#1a1f2e]'
+                    }
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext 
+                  href={`?page=${page + 1}`}
+                  className={`bg-secondary text-[#ffffff] ${page === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                  aria-disabled={page === totalPages}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
     </div>
   )
 }

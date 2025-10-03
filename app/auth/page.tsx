@@ -15,14 +15,14 @@ import { useDebouncedCallback } from "use-debounce";
 
 import { FcGoogle } from "react-icons/fc";
 
-type FormErrors = Partial<Record<"name" | "email" | "password", string>>;
+type FormErrors = Partial<Record<"username" | "email" | "password", string>>;
 
 export default function TypeFastAuth() {
   const [activeTab, setActiveTab] = useState("signin");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
   });
@@ -96,10 +96,10 @@ export default function TypeFastAuth() {
       }
 
       try {
-        const res = await registerUser(formData);
+        const res = await registerUser({ name: formData.username, email: formData.email, password: formData.password });
         if (res.success) {
           toast.success("Registration Successful");
-          setFormData({ name: "", email: "", password: "" });
+          setFormData({ username: "", email: "", password: "" });
           setActiveTab("signin");
           setIsLoading(false);
         }
@@ -243,9 +243,9 @@ export default function TypeFastAuth() {
                       <Input
                         id="signup-name"
                         type="text"
-                        value={formData.name}
+                        value={formData.username}
                         onChange={(e) => {
-                          handleInputChange("name", e.target.value);
+                          handleInputChange("username", e.target.value);
                           debouncedCheckUsername(e.target.value);
                         }}
                         className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-green-500 h-10 sm:h-11 text-sm sm:text-base"
@@ -271,8 +271,8 @@ export default function TypeFastAuth() {
                           <span>Username already taken</span>
                         </div>
                       )}
-                      {errors.name && (
-                        <p className="text-red-400 text-sm">{errors.name}</p>
+                      {errors.username && (
+                        <p className="text-red-400 text-sm">{errors.username}</p>
                       )}
                     </div>
                   </div>
