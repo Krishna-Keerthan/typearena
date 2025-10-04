@@ -53,13 +53,13 @@ export default async function LeaderboardTable({ page, skip }: { page: number; s
 
   return (
     <>
-      <div className="bg-[#1a1f2e] rounded-xl shadow-xl overflow-hidden border border-[#4fd1c7]/10">
+      <div className="bg-[#1a1f2e] rounded-xl shadow-xl overflow-x-scroll md:overflow-hidden border border-[#4fd1c7]/10">
         <div className="overflow-x-auto min-w-[600px]">
           <table className="min-w-full text-left text-sm text-[#e6f1ff]">
             <thead className="bg-[#0f1419] text-[#00d9b7] uppercase text-xs sm:text-sm">
               <tr>
                 <th className="px-4 sm:px-6 py-3 font-semibold">Rank</th>
-                <th className="px-4 sm:px-6 py-3 font-semibold">Name</th>
+                <th className="px-4 sm:px-6 py-3 font-semibold">Username</th>
                 <th className="px-4 sm:px-6 py-3 font-semibold">WPM</th>
                 <th className="px-4 sm:px-6 py-3 font-semibold">Points</th>
                 <th className="px-4 sm:px-6 py-3 font-semibold">Date</th>
@@ -99,12 +99,11 @@ export default async function LeaderboardTable({ page, skip }: { page: number; s
           </table>
         </div>
         {/* Footer */}
-        <div className="bg-[#0f1419] px-4 sm:px-6 py-3 sm:py-4 border-t border-[#4fd1c7]/20">
+        {/* <div className="bg-[#0f1419] px-4 sm:px-6 py-3 sm:py-4 border-t w-full border-[#4fd1c7]/20">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs sm:text-sm text-[#8892b0]">
             <span>Showing {leaderboard.length} users</span>
-            <span>Updated just now</span>
           </div>
-        </div>
+        </div> */}
       </div>
       {/* Pagination */}
       <div className="flex justify-center  py-6">

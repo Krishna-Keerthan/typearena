@@ -21,6 +21,7 @@ export default function TypeFastAuth() {
   const [activeTab, setActiveTab] = useState("signin");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -51,6 +52,11 @@ export default function TypeFastAuth() {
       setUsernameStatus(null);
     }
   }, 500);
+
+  const handleGoogleSignIn = () => {
+    setIsGoogleLoading(true);
+    signIn("google", { callbackUrl: "/type" });
+  }
 
 
   const handleSubmit = async (type: "signin" | "signup") => {
@@ -216,11 +222,12 @@ export default function TypeFastAuth() {
 
                   {/* Google Sign In */}
                   <Button
-                    onClick={() => signIn("google", { callbackUrl: "/type" })}
+                    onClick={handleGoogleSignIn}
+                    disabled={isGoogleLoading}
                     className="w-full bg-white hover:bg-gray-100 text-black font-semibold py-2.5 sm:py-3 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base h-10 sm:h-11"
                   >
                     <FcGoogle className="text-lg sm:text-xl" />
-                    Sign in with Google
+                    {isGoogleLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> <span>Sign in with Google</span></>  : "Sign in with Google"}
                   </Button>
                 </div>
               </CardContent>
