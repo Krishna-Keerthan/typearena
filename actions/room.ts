@@ -34,35 +34,6 @@ export async function createRoom(roomData: RoomData) {
 }
 
 
-export async function getRoomByUserId(userId: string) {
-    const session = getServerSession(authOptions)
-
-    if (!session) {
-        return { success: false, data: null }
-    }
-
-    try {
-        const room = await prisma.room.findMany({
-            where: { hostId: userId },
-            select: {
-                name: true,
-                code: true,
-                id: true,
-                hostId: true,
-                mode: true,
-                mondeOption: true,
-                user: true
-            }
-
-        })
-
-        return { success: true, data: room }
-    } catch (error) {
-        console.error("Failed to fetch the room")
-    }
-
-}
-
 export async function getRoomByCode(code: string) {
     const session = getServerSession(authOptions)
 

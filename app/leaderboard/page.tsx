@@ -1,75 +1,63 @@
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-import prisma from "@/lib/prisma"
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination"
-import { redirect } from "next/navigation"
+import { Suspense } from "react";
+import LeaderboardTable from "@/components/leaderboard/LeaderboardTable";
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 10;
 
-const displayDate = (date: Date) => {
-  return new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
-}
+function LoadingFallback() {
+  return (
+    <div className="bg-[#1a1f2e] rounded-xl shadow-xl overflow-hidden border border-[#4fd1c7]/10 animate-pulse">
+    {/* Table Header */}
+    <div className="bg-[#0f1419] px-4 sm:px-6 py-3 sm:py-4 border-b border-[#4fd1c7]/20">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 font-semibold text-[#00d9b7] text-xs sm:text-sm uppercase tracking-wide">
+        <div>Rank</div>
+        <div>Name</div>
+        <div className="hidden md:block">WPM</div>
+        <div className="hidden md:block">Points</div>
+        <div className="hidden md:block">Date</div>
+      </div>
+    </div>
 
-
-
-const getDifficultyBadge = (difficulty: string) => {
-  switch (difficulty.toLowerCase()) {
-    case "easy":
-      return "px-4 bg-gradient-to-r from-green-400 to-green-600 text-white text-sm font-bold rounded-full shadow-md hover:from-green-500 hover:to-green-700 transition-all duration-200"
-    case "medium":
-      return "px-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 text-sm font-bold rounded-full shadow-md hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200"
-    case "hard":
-      return "px-4 bg-gradient-to-r from-red-500 to-red-700 text-white text-sm font-bold rounded-full shadow-lg hover:from-red-600 hover:to-red-800 transition-all duration-200"
-    default:
-      return "px-4 py-1 bg-gray-500 text-white text-sm font-bold rounded-full shadow-md"
-  }
-}
-
-const getRankBadge = (rank: number): string => {
-  switch (rank) {
-    case 1:
-      return "bg-gradient-to-r from-yellow-400 to-yellow-600 text-yellow-900"
-    case 2:
-      return "bg-gradient-to-r from-gray-300 to-gray-500 text-gray-900"
-    case 3:
-      return "bg-gradient-to-r from-amber-600 to-amber-800 text-amber-100"
-    default:
-      return "bg-[#1a1f2e] text-[#8892b0] border border-[#4fd1c7]/20"
-  }
-}
-
-interface LeaderboardEntry {
-  id: string
-  wpm: number
-  difficulty: string
-  points: number
-  user: {
-    id: string
-    name: string | null
-    updatedAt: Date
-  }
+    {/* Table Rows Skeleton */}
+    <div className="divide-y divide-[#4fd1c7]/10">
+      {Array.from({ length: 10 }).map((_, i) => (
+        <div
+          key={i}
+          className={`px-4 sm:px-6 py-3 sm:py-4 ${
+            i % 2 === 0 ? "bg-[#1a1f2e]" : "bg-[#0f1419]/50"
+          }`}
+        >
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 items-center">
+            {/* Rank */}
+            <div className="flex items-center">
+              <div className="w-7 sm:w-8 h-7 sm:h-8 rounded-full bg-[#2a324b]" />
+            </div>
+            {/* Name */}
+            <div className="flex items-center">
+              <div className="h-4 sm:h-5 w-24 sm:w-36 bg-[#2a324b] rounded-md" />
+            </div>
+            {/* WPM */}
+            <div className="hidden md:flex items-center">
+              <div className="h-4 w-10 bg-[#2a324b] rounded-md" />
+            </div>
+            {/* Points */}
+            <div className="hidden md:flex items-center">
+              <div className="h-4 w-12 bg-[#2a324b] rounded-md" />
+            </div>
+            {/* Date */}
+            <div className="hidden md:flex items-center">
+              <div className="h-4 w-20 bg-[#2a324b] rounded-md" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+  );
 }
 
 export default async function Leaderboard({ searchParams }: { searchParams?: Promise<{ page?: string }> }) {
-  const page = Math.max(1, Number((await searchParams)?.page) || 1)
-  const skip = (page - 1) * PAGE_SIZE
-
-  const totalCount = await prisma.leaderBoard.count()
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
-  if (page > totalPages && totalPages > 0) redirect(`/leaderboard?page=${totalPages}`)
-
-  const leaderboard: LeaderboardEntry[] = await prisma.leaderBoard.findMany({
-    skip,
-    take: PAGE_SIZE,
-    orderBy: [
-      { points: "desc" }
-    ],
-    include: { user: true },
-  })
+  const page = Math.max(1, Number((await searchParams)?.page) || 1);
+  const skip = (page - 1) * PAGE_SIZE;
 
   return (
     <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 mt-16 sm:mt-20">
@@ -77,126 +65,9 @@ export default async function Leaderboard({ searchParams }: { searchParams?: Pro
         <h2 className="text-2xl sm:text-3xl font-bold text-[#e6f1ff] mb-2">Leaderboard</h2>
         <p className="text-sm sm:text-base text-[#8892b0]">Top performers ranked by WPM and points</p>
       </div>
-
-      {/* Leaderboard Table */}
-      <div className="bg-[#1a1f2e] rounded-xl shadow-xl overflow-hidden border border-[#4fd1c7]/10">
-        {/* Table Header */}
-        <div className="bg-[#0f1419] px-4 sm:px-6 py-3 sm:py-4 border-b border-[#4fd1c7]/20">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 font-semibold text-[#00d9b7] text-xs sm:text-sm uppercase tracking-wide">
-            <div className="flex items-center">Rank</div>
-            <div className="flex items-center">Name</div>
-            <div className="hidden md:flex items-center">WPM</div>
-            <div className="hidden md:flex items-center">Points</div>
-            <div className="hidden md:flex items-center">Date</div>
-          </div>
-        </div>
-
-        {/* Table Body */}
-        <div className="divide-y divide-[#4fd1c7]/10">
-          {leaderboard.map((user, index) => {
-            const rank = skip + index + 1
-            return (
-              <div
-                key={user.id}
-                className={`px-4 sm:px-6 py-3 sm:py-4 transition-all duration-200 hover:bg-[#22d3ee]/5 ${
-                  index % 2 === 0 ? "bg-[#1a1f2e]" : "bg-[#0f1419]/50"
-                }`}
-              >
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 items-center">
-                  {/* Rank */}
-                  <div className="flex items-center">
-                    <span
-                      className={`inline-flex items-center justify-center w-7 sm:w-8 h-7 sm:h-8 rounded-full text-xs sm:text-sm font-bold ${getRankBadge(rank)}`}
-                    >
-                      {rank}
-                    </span>
-                  </div>
-
-                  {/* Username */}
-                  <div className="flex items-center">
-                    <span className="font-medium text-[#e6f1ff] truncate text-sm sm:text-base">
-                      {user.user.name}
-                    </span>
-                  </div>
-
-                  {/* WPM */}
-                  <div className="hidden md:flex items-center">
-                    <span className="text-[#4fd1c7] font-semibold">{user.wpm}</span>
-                  </div>
-
-                  {/* Points */}
-                  <div className="hidden md:flex items-center">
-                    <span className="text-[#e6f1ff] font-semibold">{user.points}</span>
-                  </div>
-                  <div className="hidden md:flex items-center">
-                    <span className="text-[#e6f1ff] font-semibold">
-                    {displayDate(user.user.updatedAt)}
-                    </span>
-                  </div>
-
-
-                </div>
-
-                {/* Mobile-only additional info */}
-                <div className="md:hidden mt-3 pt-3 border-t border-[#4fd1c7]/10 space-y-2">
-                  <div className="flex justify-between items-center text-xs sm:text-sm text-[#8892b0]">
-                    <span>WPM: <span className="text-[#4fd1c7] font-semibold">{user.wpm}</span></span>
-                    <span>Points: <span className="text-[#e6f1ff] font-semibold">{user.points}</span></span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs text-[#8892b0]">
-                    <span>Difficulty: <span className={getDifficultyBadge(user.difficulty)}>{user.difficulty.charAt(0).toUpperCase() + user.difficulty.slice(1)}</span></span>
-                    <span className="text-[#8892b0]">{displayDate(user.user.updatedAt)}</span>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Footer */}
-        <div className="bg-[#0f1419] px-4 sm:px-6 py-3 sm:py-4 border-t border-[#4fd1c7]/20">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs sm:text-sm text-[#8892b0]">
-            <span>Showing {leaderboard.length} users</span>
-            <span>Updated just now</span>
-          </div>
-        </div>
-      </div>
-        {/* Pagination */}
-        <div className="flex justify-center  py-6">
-          <Pagination>
-            <PaginationContent className="flex gap-4">
-              <PaginationItem>
-                <PaginationPrevious 
-                  href={`?page=${page - 1}`}
-                  className={`bg-secondary text-[#ffffff] ${page === 1 ? 'pointer-events-none opacity-50' : ''}`}
-                  aria-disabled={page === 1}
-                />
-              </PaginationItem>
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <PaginationItem key={i}>
-                  <PaginationLink
-                    href={`?page=${i + 1}`}
-                    isActive={page === i + 1}
-                    className={
-                      page === i + 1
-                        ? 'border-[#4fd1c7] text-[#00d9b7] bg-[#1a1f2e]'
-                        : 'text-[#8892b0] bg-[#1a1f2e]'
-                    }
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext 
-                  href={`?page=${page + 1}`}
-                  className={`bg-secondary text-[#ffffff] ${page === totalPages ? 'pointer-events-none opacity-50' : ''}`}
-                  aria-disabled={page === totalPages}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+      <Suspense fallback={<LoadingFallback />}>
+        <LeaderboardTable page={page} skip={skip} />
+      </Suspense>
     </div>
-  )
+  );
 }
