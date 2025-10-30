@@ -5,6 +5,8 @@ import { useRoom } from '@/context/roomContext';
 import TypeArea from '@/components/type-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Medal } from "lucide-react";
+import { Confetti,ConfettiRef } from "@/components/ui/confetti";
+import { useRef } from "react";
 
 
 function clamp(n: number, min = 0, max = 100) { return Math.max(min, Math.min(max, n)); }
@@ -18,6 +20,7 @@ const Race: React.FC = () => {
   const [isFinished, setIsFinished] = useState(false);
 
   const words = useMemo(() => (raceText ? raceText.split(' ') : []), [raceText]);
+  const confettiRef = useRef<ConfettiRef>(null);
 
   useEffect(() => {
     // Reset when a new race starts
@@ -27,6 +30,12 @@ const Race: React.FC = () => {
     setIsActive(false);
     setIsFinished(false);
   }, [raceText, isStartRace]);
+
+  useEffect(() => {
+    if (isFinished && confettiRef.current) {
+      (confettiRef.current as ConfettiRef & { fire: () => void }).fire();
+    }
+  }, [isFinished]);
 
   const onStart = useCallback(() => {
     setIsActive(true);
@@ -86,6 +95,7 @@ const Race: React.FC = () => {
 
   return (
     <div className="flex flex-row-reverse  flex-wrap sm:flex-nowrap gap-4 space-y-6">
+      <Confetti ref={confettiRef} manualstart style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", pointerEvents: "none", zIndex: 50 }} />
       {/* Progress leaderboard */}
       <div className="bg-gray-900 rounded-lg p-4 w-full sm:w-[500px]">
         <h3 className="text-white font-medium mb-3">Live Progress</h3>
