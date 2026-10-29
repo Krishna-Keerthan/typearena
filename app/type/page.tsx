@@ -168,8 +168,15 @@ const TypingTest: React.FC = () => {
     };
   }, [initializeTest]);
 
+  // Bring results into view when the test finishes
+  useEffect(() => {
+    if (isFinished && typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [isFinished]);
+
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24 lg:pt-28">
+    <div className="min-h-screen  bg-gray-950 text-white p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24 lg:pt-28">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
@@ -182,26 +189,30 @@ const TypingTest: React.FC = () => {
         </div>
 
         {/* Preference Panel */}
-        <Panel
-          preferences={preferences}
-          onPreferenceChange={handlePreferenceChange}
-          onReset={initializeTest}
-          onTryAgain={initializeTest}
-          isActive={isActive}
-          isFinished={isFinished}
-        />
+        {!isFinished && (
+          <Panel
+            preferences={preferences}
+            onPreferenceChange={handlePreferenceChange}
+            onReset={initializeTest}
+            onTryAgain={initializeTest}
+            isActive={isActive}
+            isFinished={isFinished}
+          />
+        )}
 
-        {/* Type Area */}
-        <TypeArea
-          currentText={currentText}
-          userInput={userInput}
-          currentWordIndex={currentWordIndex}
-          currentCharIndex={currentCharIndex}
-          isFinished={isFinished}
-          isActive={isActive}
-          onInputChange={handleInputChange}
-          onStart={startTest}
-        />
+        {/* Type Area - hidden once the test is complete */}
+        {!isFinished && (
+          <TypeArea
+            currentText={currentText}
+            userInput={userInput}
+            currentWordIndex={currentWordIndex}
+            currentCharIndex={currentCharIndex}
+            isFinished={isFinished}
+            isActive={isActive}
+            onInputChange={handleInputChange}
+            onStart={startTest}
+          />
+        )}
 
         {/* Stats Board */}
         <Board
@@ -213,6 +224,7 @@ const TypingTest: React.FC = () => {
           isActive={isActive}
           isFinished={isFinished}
           startTime={startTimeRef.current}
+          onTryAgain={initializeTest}
         />
       </div>
     </div>

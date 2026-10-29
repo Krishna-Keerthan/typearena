@@ -1,10 +1,15 @@
 'use client'
 
 import React, { useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { Trophy, PartyPopper, ThumbsUp, Dumbbell, LogIn, RefreshCw, type LucideIcon } from 'lucide-react';
 import { Preferences } from '@/components/panel';
 import { updateLeaderboard } from '@/actions/leaderboards';
 import { useSession } from 'next-auth/react';
 import { Difficulty } from '@/types/leaderboard';
+import type { GameResult } from '@/types/leaderboard';
+
+const PENDING_RESULT_KEY = 'typearena:pendingResult';
 
 interface BoardProps {
   preferences: Preferences;
@@ -15,6 +20,7 @@ interface BoardProps {
   isActive: boolean;
   isFinished: boolean;
   startTime: number;
+  onTryAgain?: () => void;
 }
 
 const Board: React.FC<BoardProps> = ({
@@ -25,7 +31,8 @@ const Board: React.FC<BoardProps> = ({
   totalChars,
   isActive,
   isFinished,
-  startTime
+  startTime,
+  onTryAgain
 }) => {
 
   const {data:session} = useSession()
@@ -80,16 +87,18 @@ const Board: React.FC<BoardProps> = ({
           : Difficulty.HARD;
 
     if (isFinished) {
+      const result = { wpm, accuracy, difficulty: difficultyEnum };
+
       if (!userId) {
-        return
+        // Guest: keep the result so it can be saved after they sign up.
+        if (typeof window !== "undefined") {
+          localStorage.setItem(PENDING_RESULT_KEY, JSON.stringify(result));
+        }
+        return;
       }
-      const result = await updateLeaderboard({
-        wpm,
-        accuracy,
-        difficulty: difficultyEnum,
-        userId
-      });
-      console.log(result);
+
+      const saved = await updateLeaderboard({ ...result, userId });
+      console.log(saved);
     }
 
   }, [isFinished, userId, wpm, accuracy, preferences.difficulty]);
@@ -100,6 +109,25 @@ const Board: React.FC<BoardProps> = ({
     addLeaderboard()
   }, [isFinished, addLeaderboard])
 
+  // When a guest finishes a test and then signs in/up, save that result.
+  useEffect(() => {
+    if (!userId || typeof window === "undefined") return;
+
+    const pending = localStorage.getItem(PENDING_RESULT_KEY);
+    if (!pending) return;
+
+    localStorage.removeItem(PENDING_RESULT_KEY);
+
+    try {
+      const parsed = JSON.parse(pending) as Omit<GameResult, "userId">;
+      updateLeaderboard({ ...parsed, userId }).catch(() => {
+        // Ignore failures; the guest still practiced successfully.
+      });
+    } catch {
+      // Ignore malformed pending data.
+    }
+  }, [userId])
+
 
 
   // Get time display - always show countdown
@@ -108,17 +136,21 @@ const Board: React.FC<BoardProps> = ({
   };
 
   // Get performance level and color
-  const getPerformanceLevel = () => {
-    if (accuracy >= 95 && wpm >= 40) return { level: "Expert", color: "text-purple-400", emoji: "🏆" };
-    if (accuracy >= 90 && wpm >= 30) return { level: "Advanced", color: "text-green-400", emoji: "🎉" };
-    if (accuracy >= 80 && wpm >= 20) return { level: "Good", color: "text-blue-400", emoji: "👍" };
-    return { level: "Beginner", color: "text-yellow-400", emoji: "💪" };
+  const getPerformanceLevel = (): { level: string; color: string; icon: LucideIcon } => {
+    if (accuracy >= 95 && wpm >= 40) return { level: "Expert", color: "text-purple-400", icon: Trophy };
+    if (accuracy >= 90 && wpm >= 30) return { level: "Advanced", color: "text-green-400", icon: PartyPopper };
+    if (accuracy >= 80 && wpm >= 20) return { level: "Good", color: "text-blue-400", icon: ThumbsUp };
+    return { level: "Beginner", color: "text-yellow-400", icon: Dumbbell };
   };
+
+  const performance = getPerformanceLevel();
+  const PerformanceIcon = performance.icon;
 
   return (
     <div className="space-y-4 sm:space-y-6 mt-4 sm:mt-5">
       {/* Live Stats Display - Compact and Modern */}
-      <div className="flex justify-center px-2">
+      {!isFinished && (
+        <div className="flex justify-center px-2">
         {/* Mobile Layout - Grid */}
         <div className="sm:hidden grid grid-cols-2 gap-3 w-full max-w-sm">
           <div className="bg-gray-900 rounded-lg p-3 border border-gray-700 text-center">
@@ -197,6 +229,7 @@ const Board: React.FC<BoardProps> = ({
           )}
         </div>
       </div>
+      )}
 
       {/* Detailed Results (shown when test is finished) */}
       {isFinished && (
@@ -204,14 +237,23 @@ const Board: React.FC<BoardProps> = ({
           {/* Performance Header */}
           <div className="text-center mb-6 sm:mb-8">
             <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-gray-900 rounded-full border border-gray-700 mb-3 sm:mb-4">
-              <span className="text-xl sm:text-2xl">{getPerformanceLevel().emoji}</span>
-              <span className={`text-lg sm:text-xl font-bold ${getPerformanceLevel().color}`}>
-                {getPerformanceLevel().level}
+              <PerformanceIcon className={`w-5 h-5 sm:w-6 sm:h-6 ${performance.color}`} />
+              <span className={`text-lg sm:text-xl font-bold ${performance.color}`}>
+                {performance.level}
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
               Test Results
             </h2>
+            {onTryAgain && (
+              <button
+                onClick={onTryAgain}
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#00d9b7] to-[#00c4a7] text-black rounded-md hover:from-[#00c4a7] hover:to-[#00b399] transition-all duration-200 font-semibold text-sm transform hover:scale-105 shadow-md"
+              >
+                <RefreshCw size={16} />
+                Try Again
+              </button>
+            )}
           </div>
 
           {/* Main Stats Grid */}
@@ -289,6 +331,25 @@ const Board: React.FC<BoardProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Guest CTA - Sign in to save results */}
+          {!userId && (
+            <div className="bg-gradient-to-r from-gray-900 to-gray-800 border border-[#00d9b7]/40 rounded-xl p-4 sm:p-6 text-center">
+              <p className="text-white font-medium mb-1">
+                Want to save this score?
+              </p>
+              <p className="text-gray-400 text-xs sm:text-sm mb-4">
+                Create a free account to save your progress and appear on the leaderboard.
+              </p>
+              <Link
+                href="/auth"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-[#00d9b7] hover:bg-[#00c4a7] text-black rounded-md font-medium text-sm transition-all duration-200 transform hover:scale-105"
+              >
+                <LogIn size={16} />
+                Create account / Sign in
+              </Link>
+            </div>
+          )}
 
         </div>
       )}

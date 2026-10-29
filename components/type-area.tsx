@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect } from 'react';
 import { Difficulty } from '@/components/panel';
 
 interface TypeAreaProps {
@@ -52,12 +52,51 @@ const TypeArea: React.FC<TypeAreaProps> = ({
   onStart
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const caretAnchorRef = useRef<HTMLSpanElement>(null);
+  const caretRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (inputRef.current && !isFinished) {
       inputRef.current.focus();
     }
   }, [isFinished]);
+
+  // Keep the hidden input focused so typing is always captured directly.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isFinished) return;
+      const active = document.activeElement;
+      if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+        return;
+      }
+      if (e.key.length === 1 || e.key === 'Backspace') {
+        inputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFinished]);
+
+  const focusInput = () => {
+    if (!isFinished) inputRef.current?.focus();
+  };
+
+  useLayoutEffect(() => {
+    const anchor = caretAnchorRef.current;
+    const caret = caretRef.current;
+    const container = containerRef.current;
+
+    if (!anchor || !caret || !container) return;
+
+    const anchorRect = anchor.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    caret.style.left = `${anchorRect.left - containerRect.left}px`;
+    caret.style.top = `${anchorRect.top - containerRect.top}px`;
+    caret.style.height = `${anchorRect.height}px`;
+  }, [currentText, currentWordIndex, currentCharIndex, userInput]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isActive && !isFinished) {
@@ -73,11 +112,26 @@ const TypeArea: React.FC<TypeAreaProps> = ({
   
     return (
       <div className="p-3 sm:p-4 font-mono text-sm sm:text-base lg:text-lg leading-relaxed select-none">
-        <div className="text-xs text-gray-500 uppercase tracking-wider font-sans mb-3 sm:mb-4">
-          TYPE THE TEXT BELOW
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="text-xs text-gray-500 uppercase tracking-wider font-sans">
+            {isActive ? 'KEEP TYPING' : 'START TYPING'}
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2">
+            {isActive && !isFinished && (
+              <>
+                <div className="w-2 h-2 bg-[#00d9b7] rounded-full animate-pulse" />
+                <span className="text-xs text-gray-400 font-sans hidden sm:inline">TYPING</span>
+              </>
+            )}
+          </div>
         </div>
-  
-        <div className="flex flex-wrap">
+
+        <div ref={containerRef} className="flex flex-wrap relative">
+          <div
+            ref={caretRef}
+            className="absolute w-0.5 bg-[#00d9b7] rounded-full pointer-events-none transition-[left,top,height] duration-75 ease-linear animate-caret"
+            style={{ left: 0, top: 0, height: '1.25em' }}
+          />
           {words.map((word, wordIndex) => {
             const isCurrentWord = wordIndex === currentWordIndex;
             const isPastWord = wordIndex < currentWordIndex;
@@ -95,8 +149,6 @@ const TypeArea: React.FC<TypeAreaProps> = ({
                       className += typedChar === char
                         ? ' text-[#00d9b7]'
                         : ' text-red-400';
-                    } else if (charIndex === currentCharIndex) {
-                      className += ' text-white underline'; // subtle cursor
                     } else {
                       className += ' text-gray-400';
                     }
@@ -105,11 +157,19 @@ const TypeArea: React.FC<TypeAreaProps> = ({
                   }
   
                   return (
-                    <span key={`${wordIndex}-${charIndex}-${char}`} className={className}>
-                      {char}
-                    </span>
+                    <React.Fragment key={`${wordIndex}-${charIndex}-${char}`}>
+                      {isCurrentWord && charIndex === currentCharIndex && (
+                        <span ref={caretAnchorRef} className="inline-block w-0 h-[1.25em]" aria-hidden />
+                      )}
+                      <span className={className}>
+                        {char}
+                      </span>
+                    </React.Fragment>
                   );
                 })}
+                {isCurrentWord && currentCharIndex >= word.length && (
+                  <span ref={caretAnchorRef} className="inline-block w-0 h-[1.25em]" aria-hidden />
+                )}
                 {/* Space after word */}
                 <span className="inline-block w-1">&nbsp;</span>
               </span>
@@ -129,57 +189,34 @@ const TypeArea: React.FC<TypeAreaProps> = ({
   return (
     <div className="space-y-3 sm:space-y-4">
       {/* Text Display Area */}
-      <div className="bg-gray-900 rounded-lg border-2 border-gray-700 min-h-36 sm:min-h-48 relative">
+      <div
+        onClick={focusInput}
+        className="bg-gray-900 rounded-lg border-2 border-gray-700 min-h-36 sm:min-h-48 relative cursor-text"
+      >
         {renderText()}
-        
-        {/* Status indicator */}
-        <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2">
-          {isActive && !isFinished && (
-            <div className="flex items-center gap-1 sm:gap-2">
-              <div className="w-2 h-2 bg-[#00d9b7] rounded-full animate-pulse" />
-              <span className="text-xs text-gray-400 font-sans hidden sm:inline">TYPING</span>
-            </div>
-          )}
-          {isFinished && (
-            <div className="flex items-center gap-1 sm:gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className="text-xs text-gray-400 font-sans hidden sm:inline">COMPLETED</span>
-            </div>
-          )}
-        </div>
+
+        {!isActive && !isFinished && (
+          <div className="absolute inset-x-0 bottom-3 text-center text-xs text-gray-500 font-sans pointer-events-none">
+            Click here or start typing to begin
+          </div>
+        )}
       </div>
 
-      {/* Input Field */}
-      <div className="relative">
-        <input
-          ref={inputRef}
-          type="text"
-          value={userInput}
-          onChange={handleInputChange}
-          disabled={isFinished}
-          className="w-full p-3 sm:p-4 bg-gray-800 border-2 border-gray-700 rounded-lg text-white font-mono text-sm sm:text-base lg:text-lg focus:outline-none focus:border-[#00d9b7] transition-all duration-200 placeholder-gray-500"
-          placeholder={
-            isFinished 
-              ? "Test completed! Check your results below." 
-              : isActive 
-                ? "Keep typing..." 
-                : "Click here and start typing..."
-          }
-          autoFocus
-          autoComplete="off"
-          spellCheck="false"
-        />
-        
-        {/* Input status indicator */}
-        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-          {isActive && !isFinished && (
-            <div className="w-2 h-2 bg-[#00d9b7] rounded-full animate-pulse" />
-          )}
-          {isFinished && (
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
-          )}
-        </div>
-      </div>
+      {/* Hidden input captures direct keyboard typing */}
+      <input
+        ref={inputRef}
+        type="text"
+        value={userInput}
+        onChange={handleInputChange}
+        disabled={isFinished}
+        className="sr-only"
+        autoFocus
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck="false"
+        aria-label="Typing input"
+      />
     </div>
   );
 };

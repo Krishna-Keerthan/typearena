@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/type', request.url))
   }
 
-  if (!token && (url.pathname.startsWith('/type') || url.pathname.startsWith('/multiplayer') ||url.pathname.startsWith('/profile') )) {
+  if (!token && (url.pathname.startsWith('/multiplayer') || url.pathname.startsWith('/profile'))) {
     return NextResponse.redirect(new URL('/auth', request.url))
   }
 
