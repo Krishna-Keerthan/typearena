@@ -39,7 +39,7 @@ const PublicRoom = ({ rooms }: PublicRoomProps) => {
           {rooms.map((room) => (
             <div
               key={room.id}
-              className="bg-gray-900 rounded-lg p-4 flex items-center justify-between hover:bg-gray-800 transition-colors duration-200"
+              className="bg-gray-900  rounded-lg p-4 flex items-center justify-between hover:bg-gray-800 transition-colors duration-200"
             >
               <div className="flex  gap-2 sm:gap-0 flex-col">
                 <h4 className="text-white font-medium">{room.name}</h4>

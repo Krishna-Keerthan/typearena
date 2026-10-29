@@ -30,7 +30,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed top-0 bg-background z-50 w-full py-4 px-6 border-b border-border">
+    <header className="fixed top-0 bg-gray-900 z-50 w-full py-4 px-6 border-b border-border">
       <nav className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center space-x-2">
@@ -94,7 +94,7 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="md:hidden absolute top-[64px] left-0 w-full bg-background shadow-lg border-t border-border animate-in slide-in-from-top duration-300">
+        <div className="md:hidden absolute top-[64px] left-0 w-full bg-gray-900 shadow-lg border-t border-border animate-in slide-in-from-top duration-300">
           <div className="flex flex-col items-start space-y-4 px-6 py-6">
             {navigationItems.map((item, index) => (
               <Link
