@@ -1,0 +1,6 @@
+node_modules
+dist
+prisma/schema.prisma
+.env
+.env.*
+!.env.example

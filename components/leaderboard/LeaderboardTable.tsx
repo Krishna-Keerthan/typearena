@@ -1,18 +1,28 @@
-import prisma from "@/lib/prisma";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
-import { redirect } from "next/navigation";
+"use client";
 
-const PAGE_SIZE = 10;
+import { useEffect, useState } from "react";
+import { io, type Socket } from "socket.io-client";
+import { useSession } from "next-auth/react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
+import type { LeaderboardEntry } from "@/types/room";
 
-const displayDate = (date: Date) => {
+const SOCKET_URL =
+  process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:4000";
+
+const displayDate = (date: string) => {
   return new Date(date).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 };
-
-
 
 const getRankBadge = (rank: number): string => {
   switch (rank) {
@@ -27,29 +37,91 @@ const getRankBadge = (rank: number): string => {
   }
 };
 
-interface LeaderboardEntry {
-  id: string;
-  wpm: number;
-  difficulty: string;
-  points: number;
-  user: {
-    id: string;
-    name: string | null;
-    updatedAt: Date;
-  };
+interface LeaderboardTableProps {
+  initialEntries: LeaderboardEntry[];
+  page: number;
+  totalPages: number;
+  live: boolean;
 }
 
-export default async function LeaderboardTable({ page, skip }: { page: number; skip: number }) {
-  const totalCount = await prisma.leaderBoard.count();
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  if (page > totalPages && totalPages > 0) redirect(`/leaderboard?page=${totalPages}`);
+export default function LeaderboardTable({
+  initialEntries,
+  page,
+  totalPages,
+  live,
+}: LeaderboardTableProps) {
+  const [entries, setEntries] = useState(initialEntries);
+  const { status } = useSession();
 
-  const leaderboard: LeaderboardEntry[] = await prisma.leaderBoard.findMany({
-    skip,
-    take: PAGE_SIZE,
-    orderBy: [{ points: "desc" }],
-    include: { user: true },
-  });
+  useEffect(() => {
+    setEntries(initialEntries);
+  }, [initialEntries]);
+
+  useEffect(() => {
+    if (!live || status !== "authenticated") return;
+
+    let cancelled = false;
+    let socket: Socket | null = null;
+
+    const connect = async () => {
+      try {
+        socket = io(SOCKET_URL, {
+          auth: (callback) => {
+            fetch("/api/socket-token", { cache: "no-store" })
+              .then((response) => (response.ok ? response.json() : null))
+              .then((data: { token?: string } | null) => {
+                callback(data?.token ? { token: data.token } : {});
+              })
+              .catch(() => callback({}));
+          },
+        });
+
+        socket.on("connect", () => {
+          socket?.timeout(5000).emit(
+            "watch_leaderboard",
+            (
+              error: Error | null,
+              response?: { ok: boolean; entries?: LeaderboardEntry[] }
+            ) => {
+              if (cancelled || error) return;
+              if (response?.ok && Array.isArray(response.entries)) {
+                setEntries(response.entries);
+              }
+            }
+          );
+        });
+
+        socket.on(
+          "leaderboard_updated",
+          (payload: { entries?: LeaderboardEntry[] }) => {
+            if (cancelled) return;
+            if (Array.isArray(payload?.entries)) {
+              setEntries(payload.entries);
+            }
+          }
+        );
+
+        socket.on("connect_error", (error) => {
+          if (error.message === "Unauthorized") {
+            socket?.disconnect();
+          }
+        });
+      } catch {
+        // The server-rendered leaderboard remains usable without live updates.
+      }
+    };
+
+    void connect();
+
+    return () => {
+      cancelled = true;
+      if (socket) {
+        socket.emit("unwatch_leaderboard");
+        socket.disconnect();
+        socket = null;
+      }
+    };
+  }, [live, status]);
 
   return (
     <>
@@ -66,11 +138,11 @@ export default async function LeaderboardTable({ page, skip }: { page: number; s
               </tr>
             </thead>
             <tbody className="divide-y divide-[#4fd1c7]/10">
-              {leaderboard.map((user, index) => {
-                const rank = skip + index + 1;
+              {entries.map((entry, index) => {
+                const rank = page === 1 ? entry.rank : (page - 1) * 10 + index + 1;
                 return (
                   <tr
-                    key={user.id}
+                    key={entry.userId}
                     className={index % 2 === 0 ? "bg-[#1a1f2e]" : "bg-[#0f1419]/50"}
                   >
                     <td className="px-4 sm:px-6 py-3">
@@ -80,39 +152,42 @@ export default async function LeaderboardTable({ page, skip }: { page: number; s
                     </td>
                     <td className="px-4 sm:px-6 py-3">
                       <span className="font-medium truncate text-sm sm:text-base">
-                        {user.user.name}
+                        {entry.name}
                       </span>
                     </td>
                     <td className="px-4 sm:px-6 py-3">
-                      <span className="text-[#4fd1c7] font-semibold">{user.wpm}</span>
+                      <span className="text-[#4fd1c7] font-semibold">{entry.wpm}</span>
                     </td>
                     <td className="px-4 sm:px-6 py-3">
-                      <span className="text-[#e6f1ff] font-semibold">{user.points}</span>
+                      <span className="text-[#e6f1ff] font-semibold">{entry.points}</span>
                     </td>
                     <td className="px-4 sm:px-6 py-3">
-                      <span className="text-[#e6f1ff] font-semibold">{displayDate(user.user.updatedAt)}</span>
+                      <span className="text-[#e6f1ff] font-semibold">
+                        {displayDate(entry.updatedAt)}
+                      </span>
                     </td>
                   </tr>
                 );
               })}
+              {entries.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center text-[#8892b0]">
+                    No leaderboard entries yet.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-        {/* Footer */}
-        {/* <div className="bg-[#0f1419] px-4 sm:px-6 py-3 sm:py-4 border-t w-full border-[#4fd1c7]/20">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs sm:text-sm text-[#8892b0]">
-            <span>Showing {leaderboard.length} users</span>
-          </div>
-        </div> */}
       </div>
-      {/* Pagination */}
-      <div className="flex justify-center  py-6">
+
+      <div className="flex justify-center py-6">
         <Pagination>
           <PaginationContent className="flex gap-4">
             <PaginationItem>
-              <PaginationPrevious 
+              <PaginationPrevious
                 href={`?page=${page - 1}`}
-                className={`bg-secondary text-[#ffffff] ${page === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                className={`bg-secondary text-[#ffffff] ${page === 1 ? "pointer-events-none opacity-50" : ""}`}
                 aria-disabled={page === 1}
               />
             </PaginationItem>
@@ -123,8 +198,8 @@ export default async function LeaderboardTable({ page, skip }: { page: number; s
                   isActive={page === i + 1}
                   className={
                     page === i + 1
-                      ? 'border-[#4fd1c7] text-[#00d9b7] bg-[#1a1f2e]'
-                      : 'text-[#8892b0] bg-[#1a1f2e]'
+                      ? "border-[#4fd1c7] text-[#00d9b7] bg-[#1a1f2e]"
+                      : "text-[#8892b0] bg-[#1a1f2e]"
                   }
                 >
                   {i + 1}
@@ -132,9 +207,9 @@ export default async function LeaderboardTable({ page, skip }: { page: number; s
               </PaginationItem>
             ))}
             <PaginationItem>
-              <PaginationNext 
+              <PaginationNext
                 href={`?page=${page + 1}`}
-                className={`bg-secondary text-[#ffffff] ${page === totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                className={`bg-secondary text-[#ffffff] ${page === totalPages ? "pointer-events-none opacity-50" : ""}`}
                 aria-disabled={page === totalPages}
               />
             </PaginationItem>
@@ -144,4 +219,3 @@ export default async function LeaderboardTable({ page, skip }: { page: number; s
     </>
   );
 }
-

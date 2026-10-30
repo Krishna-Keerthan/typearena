@@ -2,7 +2,7 @@
 
 import { getRoomByCode } from "@/actions/room"
 import { useSession } from "next-auth/react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import ChatBox from "@/components/chatBox"
 import ParticipantsList from "@/components/participantsList"
@@ -26,8 +26,17 @@ export default function Page() {
   const { data: session } = useSession()
   const [roomDetails, setRoomDetails] = useState<RoomDetails | null>(null)
   const [isHost, setIsHost] = useState(false)
-  const { isStartRace, startRace, resetRace, leaveRoom } = useRoom()
+  const {
+    isStartRace,
+    startRace,
+    resetRace,
+    leaveRoom,
+    joinRoom,
+    currentRoom,
+    isConnected,
+  } = useRoom()
   const router = useRouter()
+  const joinAttemptedRef = useRef(false)
 
   useEffect(() => {
     async function fetchRoom() {
@@ -42,6 +51,21 @@ export default function Page() {
     }
     fetchRoom()
   }, [code, session?.user.id])
+
+  useEffect(() => {
+    joinAttemptedRef.current = false
+  }, [roomDetails?.id])
+
+  useEffect(() => {
+    if (!roomDetails || !session?.user?.name) return
+    if (currentRoom?.id === roomDetails.id) return
+    if (joinAttemptedRef.current) return
+
+    joinAttemptedRef.current = true
+    joinRoom(roomDetails.id, roomDetails.name, session.user.name).catch((error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to join the room")
+    })
+  }, [roomDetails, session?.user?.name, currentRoom?.id, joinRoom])
 
   const handleStartRace = () => {
     if (isHost) startRace(true)
@@ -64,6 +88,12 @@ export default function Page() {
     <div className="text-white flex flex-col pt-28 ">
 
       <div className="w-full max-w-7xl mx-auto px-6">
+
+        {!isConnected && (
+          <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-300">
+            Reconnecting to the realtime server...
+          </div>
+        )}
 
         {/* Top Bar */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">

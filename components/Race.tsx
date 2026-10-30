@@ -7,12 +7,24 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Medal } from "lucide-react";
 import { Confetti,ConfettiRef } from "@/components/ui/confetti";
 import { useRef } from "react";
+import { useSession } from "next-auth/react";
+import { updateLeaderboard } from "@/actions/leaderboards";
+import { Difficulty } from "@/types/leaderboard";
 
 
 function clamp(n: number, min = 0, max = 100) { return Math.max(min, Math.min(max, n)); }
 
 const Race: React.FC = () => {
-  const { raceText, progressByUser, finishedAtByUser, sendProgress, isStartRace } = useRoom();
+  const {
+    raceText,
+    progressByUser,
+    finishedAtByUser,
+    sendProgress,
+    isStartRace,
+    participants,
+    currentRoom,
+  } = useRoom();
+  const { data: session } = useSession();
   const [userInput, setUserInput] = useState('');
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
@@ -21,6 +33,17 @@ const Race: React.FC = () => {
 
   const words = useMemo(() => (raceText ? raceText.split(' ') : []), [raceText]);
   const confettiRef = useRef<ConfettiRef>(null);
+  const startTimeRef = useRef(0);
+  const errorsRef = useRef(0);
+  const submittedRef = useRef(false);
+
+  const nameByUserId = useMemo(() => {
+    const lookup = new Map<string, string>();
+    for (const participant of participants) {
+      lookup.set(participant.id, participant.username);
+    }
+    return lookup;
+  }, [participants]);
 
   useEffect(() => {
     // Reset when a new race starts
@@ -29,7 +52,43 @@ const Race: React.FC = () => {
     setCurrentCharIndex(0);
     setIsActive(false);
     setIsFinished(false);
+    startTimeRef.current = 0;
+    errorsRef.current = 0;
+    submittedRef.current = false;
   }, [raceText, isStartRace]);
+
+  const submitRaceResult = useCallback(() => {
+    if (submittedRef.current) return;
+
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    submittedRef.current = true;
+
+    const elapsedMinutes = Math.max(
+      (Date.now() - startTimeRef.current) / 60000,
+      0.01
+    );
+    const totalWords = Math.max(words.length, 1);
+    const wpm = Math.max(0, Math.round(words.length / elapsedMinutes));
+    const accuracy = Math.max(
+      0,
+      Math.min(100, 100 - Math.round((errorsRef.current / totalWords) * 100))
+    );
+    const wordCount = Number(
+      (currentRoom?.mondeOption ?? '').match(/\d+/)?.[0] ?? 25
+    );
+    const difficulty =
+      wordCount <= 10
+        ? Difficulty.EASY
+        : wordCount <= 25
+          ? Difficulty.MEDIUM
+          : Difficulty.HARD;
+
+    updateLeaderboard({ userId, wpm, accuracy, difficulty }).catch(() => {
+      // Keep the race result local if the leaderboard write fails.
+    });
+  }, [session?.user?.id, words.length, currentRoom?.mondeOption]);
 
   useEffect(() => {
     if (isFinished && confettiRef.current) {
@@ -38,12 +97,19 @@ const Race: React.FC = () => {
   }, [isFinished]);
 
   const onStart = useCallback(() => {
+    if (!startTimeRef.current) {
+      startTimeRef.current = Date.now();
+    }
     setIsActive(true);
   }, []);
 
   const onInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setUserInput(value);
+
+    if (!startTimeRef.current) {
+      startTimeRef.current = Date.now();
+    }
 
     const currentWord = words[currentWordIndex] ?? '';
 
@@ -63,7 +129,10 @@ const Race: React.FC = () => {
 
         if (nextIndex >= words.length) {
           setIsFinished(true);
+          submitRaceResult();
         }
+      } else {
+        errorsRef.current += 1;
       }
     } else {
       // Update char progress for current word
@@ -73,11 +142,16 @@ const Race: React.FC = () => {
       const progress = clamp(Math.round(fraction * 100));
       sendProgress(progress);
     }
-  }, [words, currentWordIndex, sendProgress]);
+  }, [words, currentWordIndex, sendProgress, submitRaceResult]);
 
   const sortedProgress = useMemo(() => {
     return Object.entries(progressByUser)
-      .map(([username, p]) => ({ username, progress: clamp(p), finishedAt: finishedAtByUser[username] ?? null }))
+      .map(([userId, p]) => ({
+        userId,
+        username: nameByUserId.get(userId) ?? userId,
+        progress: clamp(p),
+        finishedAt: finishedAtByUser[userId] ?? null,
+      }))
       .sort((a, b) => {
         if (a.progress === b.progress && a.progress === 100) {
           // Earlier finish time ranks higher
@@ -87,7 +161,7 @@ const Race: React.FC = () => {
         }
         return b.progress - a.progress;
       });
-  }, [progressByUser, finishedAtByUser]);
+  }, [progressByUser, finishedAtByUser, nameByUserId]);
 
   if (!raceText) {
     return null;
@@ -101,7 +175,7 @@ const Race: React.FC = () => {
         <h3 className="text-white font-medium mb-3">Live Progress</h3>
         <div className="space-y-3">
 
-{sortedProgress.map(({ username, progress }, index) => {
+{sortedProgress.map(({ userId, username, progress }, index) => {
   const letter = (username?.charAt(0) || '?').toUpperCase();
   const colors = [
     'bg-rose-600','bg-pink-600','bg-fuchsia-600','bg-purple-600','bg-violet-600',
@@ -123,7 +197,7 @@ const Race: React.FC = () => {
   ];
 
   return (
-    <div key={username} className="space-y-1">
+    <div key={userId} className="space-y-1">
       <div className="flex items-center justify-between text-xs text-gray-400">
         <div className="flex items-center gap-2">
           <Avatar className="size-6">

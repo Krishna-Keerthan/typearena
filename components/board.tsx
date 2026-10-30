@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Trophy, PartyPopper, ThumbsUp, Dumbbell, LogIn, RefreshCw, type LucideIcon } from 'lucide-react';
 import { Preferences } from '@/components/panel';
@@ -37,6 +37,7 @@ const Board: React.FC<BoardProps> = ({
 
   const {data:session} = useSession()
   const userId = session?.user.id
+  const savedRef = useRef(false)
 
 
   // Calculate precise WPM and accuracy
@@ -106,7 +107,15 @@ const Board: React.FC<BoardProps> = ({
 
 
   useEffect(() => {
-    addLeaderboard()
+    if (!isFinished) {
+      savedRef.current = false
+      return
+    }
+
+    if (savedRef.current) return
+
+    savedRef.current = true
+    void addLeaderboard()
   }, [isFinished, addLeaderboard])
 
   // When a guest finishes a test and then signs in/up, save that result.

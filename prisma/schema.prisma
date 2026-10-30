@@ -41,6 +41,7 @@ model User {
 
   leaderboards LeaderBoard[]
   rooms        Room[]
+  messages     Message[]
 }
 
 model Account {
@@ -100,6 +101,22 @@ model Room {
   mondeOption String
 
   user        User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  messages    Message[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  roomId    String   @db.ObjectId
+  userId    String   @db.ObjectId
+  content   String
+  clientId  String?
+  createdAt DateTime @default(now())
+
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+  @@index([roomId, clientId])
 }

@@ -1,26 +1,42 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  ReactNode,
+} from 'react';
+import { io, type Socket } from 'socket.io-client';
 import { useSession } from 'next-auth/react';
-import { ChatMessage } from '@/hooks/use-realtime-chat';
 import { toast } from 'sonner';
-import { createClient } from '@/lib/client';
+import type {
+  ChatMessage,
+  ClientChatMessage,
+  Participant,
+  RoomInfo,
+  RoomSnapshot,
+} from '@/types/room';
 
-interface Participant {
-  id: string;
-  username: string;
-  online_at: string;
-  avatar?: string;
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? 'http://localhost:4000';
+
+interface JoinRoomResponse {
+  ok: boolean;
+  state?: RoomSnapshot;
+  error?: string;
+}
+
+interface SendMessageResponse {
+  ok: boolean;
+  clientId?: string;
+  message?: ChatMessage;
+  error?: string;
 }
 
 interface RoomContextType {
-
-  currentRoom: {
-    id: string;
-    name: string;
-    code: string;
-  } | null;
+  currentRoom: RoomInfo | null;
   participants: Participant[];
   isConnected: boolean;
   isStartRace: boolean;
@@ -28,25 +44,21 @@ interface RoomContextType {
   raceText: string | null;
   progressByUser: Record<string, number>;
   finishedAtByUser: Record<string, number | null>;
+  typingUsers: string[];
 
-  channel: RealtimeChannel | null;
-  
+  channel: Socket | null;
+
   startRace: (startRace: boolean) => Promise<void>;
   resetRace: () => Promise<void>;
   joinRoom: (roomId: string, roomName: string, username: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
+  retryMessage: (message: ClientChatMessage) => Promise<void>;
   sendProgress: (progress: number) => void;
-  
+  startTyping: () => void;
+  stopTyping: () => void;
 
-  messages: Array<{
-    id: string;
-    user: {
-      name:string;
-    };
-    content: string;
-    createdAt: string;
-  }>;
+  messages: ClientChatMessage[];
 }
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
@@ -63,266 +75,571 @@ interface RoomProviderProps {
   children: ReactNode;
 }
 
+async function fetchSocketToken(): Promise<string> {
+  const response = await fetch('/api/socket-token', { cache: 'no-store' });
+
+  if (!response.ok) {
+    throw new Error('You must be signed in to join a room');
+  }
+
+  const data = (await response.json()) as { token?: string };
+
+  if (!data.token) {
+    throw new Error('Failed to authenticate the realtime connection');
+  }
+
+  return data.token;
+}
+
+function waitForConnection(socket: Socket): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('Realtime connection timed out'));
+    }, 15000);
+
+    const onConnect = () => {
+      cleanup();
+      resolve();
+    };
+
+    const onError = (error: Error) => {
+      cleanup();
+      reject(error);
+    };
+
+    const cleanup = () => {
+      clearTimeout(timeout);
+      socket.off('connect', onConnect);
+      socket.off('connect_error', onError);
+    };
+
+    socket.once('connect', onConnect);
+    socket.once('connect_error', onError);
+  });
+}
+
+function emitJoin(socket: Socket, roomId: string): Promise<JoinRoomResponse> {
+  return new Promise((resolve, reject) => {
+    socket.timeout(10000).emit(
+      'join_room',
+      { roomId },
+      (error: Error | null, result: JoinRoomResponse) => {
+        if (error) {
+          reject(new Error('Failed to join the room'));
+          return;
+        }
+        resolve(result);
+      }
+    );
+  });
+}
+
+function toClientMessage(
+  message: ChatMessage,
+  status: ClientChatMessage['status'] = 'sent'
+): ClientChatMessage {
+  return { ...message, status };
+}
+
 export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
-  const [currentRoom, setCurrentRoom] = useState<RoomContextType['currentRoom']>(null);
-  const supabase = createClient();
+  const [currentRoom, setCurrentRoom] = useState<RoomInfo | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
-  const [messages, setMessages] = useState<RoomContextType['messages']>([]);
-  const {data:session} = useSession()
-  const username = session?.user.name 
-  const [isStartRace, setIsStartRace]= useState(false)
-  const [raceText, setRaceText] = useState<string | null>(null)
-  const [progressByUser, setProgressByUser] = useState<Record<string, number>>({})
-  const [finishedAtByUser, setFinishedAtByUser] = useState<Record<string, number | null>>({})
+  const [channel, setChannel] = useState<Socket | null>(null);
+  const [messages, setMessages] = useState<ClientChatMessage[]>([]);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const { data: session } = useSession();
+  const username = session?.user.name ?? undefined;
+  const [isStartRace, setIsStartRace] = useState(false);
+  const [raceText, setRaceText] = useState<string | null>(null);
+  const [progressByUser, setProgressByUser] = useState<Record<string, number>>({});
+  const [finishedAtByUser, setFinishedAtByUser] = useState<
+    Record<string, number | null>
+  >({});
 
-  const joinRoom = async (roomId: string, roomName: string, username: string) => {
-    try {
-      // Leave existing room first
-      if (channel) {
-        await leaveRoom();
+  const socketRef = useRef<Socket | null>(null);
+  const joinedRoomRef = useRef<{ id: string; name: string } | null>(null);
+  const hasJoinedRef = useRef(false);
+  const usernameRef = useRef<string | undefined>(username);
+  const rejoiningRef = useRef(false);
+
+  useEffect(() => {
+    usernameRef.current = username;
+  }, [username]);
+
+  const cleanupSocket = useCallback(() => {
+    const socket = socketRef.current;
+
+    joinedRoomRef.current = null;
+    hasJoinedRef.current = false;
+    rejoiningRef.current = false;
+
+    if (socket) {
+      socket.io.removeAllListeners();
+      socket.removeAllListeners();
+      socket.disconnect();
+      socketRef.current = null;
+    }
+
+    setChannel(null);
+    setIsConnected(false);
+    setCurrentRoom(null);
+    setParticipants([]);
+    setMessages([]);
+    setTypingUsers([]);
+    setIsStartRace(false);
+    setRaceText(null);
+    setProgressByUser({});
+    setFinishedAtByUser({});
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      const socket = socketRef.current;
+      if (socket) {
+        socket.io.removeAllListeners();
+        socket.removeAllListeners();
+        socket.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, []);
+
+  const applySnapshot = useCallback((state: RoomSnapshot) => {
+    if (state.room) {
+      setCurrentRoom(state.room);
+    }
+    setParticipants(state.participants ?? []);
+    setMessages((prev) => {
+      const serverMessages = (state.messages ?? []).map((message) =>
+        toClientMessage(message, 'sent')
+      );
+      const serverClientIds = new Set(
+        serverMessages
+          .map((message) => message.clientId)
+          .filter((clientId): clientId is string => Boolean(clientId))
+      );
+      const pending = prev.filter(
+        (message) =>
+          (message.status === 'failed' || message.status === 'sending') &&
+          !serverClientIds.has(message.clientId ?? '')
+      );
+
+      return [...serverMessages, ...pending];
+    });
+    setIsStartRace(state.isStartRace ?? false);
+    setRaceText(state.raceText ?? null);
+    setProgressByUser(state.progressByUser ?? {});
+    setFinishedAtByUser(state.finishedAtByUser ?? {});
+    setTypingUsers([]);
+  }, []);
+
+  const mergeMessage = useCallback((message: ChatMessage) => {
+    setMessages((prev) => {
+      const incoming = toClientMessage(message, 'sent');
+
+      if (prev.some((item) => item.id === incoming.id)) {
+        return prev.map((item) =>
+          item.id === incoming.id ? { ...item, status: 'sent' } : item
+        );
       }
 
-      // Create new channel
-      const newChannel = supabase.channel(`room:${roomId}`, {
-        config: {
-          presence: {
-            key: username
+      const clientId = incoming.clientId;
+      const pendingIndex = clientId
+        ? prev.findIndex((item) => item.clientId === clientId)
+        : -1;
+
+      if (pendingIndex >= 0) {
+        const next = [...prev];
+        next[pendingIndex] = incoming;
+        return next;
+      }
+
+      return [...prev, incoming];
+    });
+  }, []);
+
+  const rejoinRoom = useCallback(
+    async (socket: Socket) => {
+      const room = joinedRoomRef.current;
+      if (!room || rejoiningRef.current) return;
+
+      rejoiningRef.current = true;
+
+      try {
+        const response = await emitJoin(socket, room.id);
+
+        if (!response.ok) {
+          throw new Error(response.error ?? 'Failed to rejoin the room');
+        }
+
+        if (response.state) {
+          applySnapshot(response.state);
+        }
+
+        setCurrentRoom((prev) =>
+          prev ?? {
+            id: room.id,
+            name: room.name,
+            code: '',
+            mode: '',
+            mondeOption: '',
+            hostId: '',
+          }
+        );
+        setIsConnected(true);
+      } catch (error) {
+        setIsConnected(false);
+        toast.error(
+          error instanceof Error ? error.message : 'Failed to rejoin the room'
+        );
+      } finally {
+        rejoiningRef.current = false;
+      }
+    },
+    [applySnapshot]
+  );
+
+  const joinRoom = useCallback(
+    async (roomId: string, roomName: string, usernameArg: string) => {
+      if (!usernameArg) {
+        throw new Error('You must be signed in to join a room');
+      }
+
+      if (socketRef.current) {
+        cleanupSocket();
+      }
+
+      try {
+        const socket = io(SOCKET_URL, {
+          autoConnect: false,
+          reconnection: true,
+          auth: (callback) => {
+            fetchSocketToken()
+              .then((token) => callback({ token }))
+              .catch((error) => {
+                toast.error(
+                  error instanceof Error ? error.message : 'Authentication failed'
+                );
+                callback({});
+              });
           },
-          broadcast: {
-            self: false
+        });
+
+        socketRef.current = socket;
+        setChannel(socket);
+
+        socket.on('connect', () => {
+          setIsConnected(true);
+
+          if (hasJoinedRef.current) {
+            toast.success('Reconnected to the room');
+            void rejoinRoom(socket);
           }
-        },
-      });
+        });
 
-      // Set up event listeners
-      newChannel
-        // Handle incoming messages
-        .on('broadcast', { event: 'NEW_MESSAGE' }, (payload: { payload: ChatMessage }) => {
-          const p = payload.payload as ChatMessage
-          setMessages(prev => [
-            ...prev,
-            {
-              id: p.id,
-              user: { name: p.user?.name },
-              content: p.content,
-              createdAt: p.createdAt,
-            },
-          ])
-        })
+        socket.on('disconnect', () => {
+          setIsConnected(false);
+          setTypingUsers([]);
+          setMessages((prev) =>
+            prev.map((message) =>
+              message.status === 'sending'
+                ? { ...message, status: 'failed' }
+                : message
+            )
+          );
+        });
 
-        // Handle race start broadcast
-        .on('broadcast', { event: 'START_RACE' }, (payload: { payload?: { text?: string } }) => {
-          const text = payload?.payload?.text as string | undefined
-          setIsStartRace(true)
-          if (text) {
-            setRaceText(text)
+        socket.on('connect_error', (error) => {
+          setIsConnected(false);
+          toast.error(error.message || 'Realtime connection failed');
+        });
+
+        socket.on('participants_updated', (list: Participant[]) => {
+          setParticipants(list);
+        });
+
+        socket.on('new_message', (message: ChatMessage) => {
+          mergeMessage(message);
+        });
+
+        socket.on('typing_updated', (payload: { users?: string[] }) => {
+          const users = Array.isArray(payload?.users) ? payload.users : [];
+          setTypingUsers(
+            users.filter((name) => name !== usernameRef.current)
+          );
+        });
+
+        socket.on('start_race', (payload: { text?: string; startedBy?: string }) => {
+          setIsStartRace(true);
+          if (payload?.text) {
+            setRaceText(payload.text);
           }
-          setProgressByUser({})
-          setFinishedAtByUser({})
-          toast.success('Race started by the host')
-        })
+          setProgressByUser({});
+          setFinishedAtByUser({});
+          toast.success(
+            payload?.startedBy
+              ? `Race started by ${payload.startedBy}`
+              : 'Race started by the host'
+          );
+        });
 
-        // Handle race reset broadcast
-        .on('broadcast', { event: 'RESET_RACE' }, () => {
-          console.log('[Realtime] RESET_RACE received')
-          setIsStartRace(false)
-          setRaceText(null)
-          setProgressByUser({})
-          setFinishedAtByUser({})
-          toast.info('Race reset by the host')
-        })
+        socket.on('reset_race', () => {
+          setIsStartRace(false);
+          setRaceText(null);
+          setProgressByUser({});
+          setFinishedAtByUser({});
+          toast.info('Race reset by the host');
+        });
 
-        // Handle race progress updates
-        .on('broadcast', { event: 'RACE_PROGRESS' }, (payload: { payload?: { username?: string; progress?: number; finishedAt?: number } }) => {
-          const u = payload?.payload?.username as string | undefined
-          const p = payload?.payload?.progress as number | undefined
-          const f = payload?.payload?.finishedAt as number | undefined
-          if (typeof u === 'string' && typeof p === 'number') {
-            setProgressByUser(prev => ({ ...prev, [u]: Math.max(0, Math.min(100, p)) }))
-            if (p >= 100) {
-              setFinishedAtByUser(prev => {
-                if (prev[u]) return prev
-                return { ...prev, [u]: typeof f === 'number' ? f : Date.now() }
-              })
+        socket.on(
+          'race_progress',
+          (payload: {
+            userId?: string;
+            username?: string;
+            progress?: number;
+            finishedAt?: number;
+          }) => {
+            const userId = payload?.userId;
+            const progress = payload?.progress;
+
+            if (typeof userId !== 'string' || typeof progress !== 'number') {
+              return;
+            }
+
+            setProgressByUser((prev) => ({
+              ...prev,
+              [userId]: Math.max(0, Math.min(100, progress)),
+            }));
+
+            if (progress >= 100) {
+              setFinishedAtByUser((prev) => {
+                if (prev[userId]) return prev;
+                return {
+                  ...prev,
+                  [userId]:
+                    typeof payload.finishedAt === 'number'
+                      ? payload.finishedAt
+                      : Date.now(),
+                };
+              });
             }
           }
-        })
+        );
 
-        // Handle user join notifications
-        .on('broadcast', { event: 'USER_JOINED' }, (payload: { payload: { username: string } }) => {
-          console.log('User joined:', payload.payload.username);
-          toast.info(`${payload.payload.username} is joined!`)
-        })
-
-        // Handle user leave notifications
-        .on('broadcast', { event: 'USER_LEFT' }, (payload: { payload: { username: string } }) => {
-          console.log('User left:', payload.payload.username);
-          toast.info(`${ payload.payload.username} is left!`)
-
-        })
-
-        // Track presence (who's online)
-        .on('presence', { event: 'sync' }, () => {
-          const state = newChannel.presenceState();
-          const users = Object.entries(state).map(([key, value]: [string, unknown]) => ({
-            id: key,
-            username: key,
-            online_at: (value as Array<{ online_at?: string; avatar?: string }>)[0]?.online_at || new Date().toISOString(),
-            avatar: (value as Array<{ online_at?: string; avatar?: string }>)[0]?.avatar,
-          }));
-          setParticipants(users);
-        })
-
-        .on('presence', { event: 'join' }, ({ key }: { key: string; newPresences: unknown }) => {
-          console.log('User joined presence:', key);
-        })
-
-        .on('presence', { event: 'leave' }, ({ key }: { key: string; leftPresences: unknown }) => {
-          console.log('User left presence:', key);
+        socket.on('user_joined', (payload: { username?: string }) => {
+          if (payload?.username) {
+            toast.info(`${payload.username} joined the room`);
+          }
         });
 
-      // Subscribe to channel
-      await newChannel.subscribe(async (status: string) => {
-        if (status === 'SUBSCRIBED') {
-          setIsConnected(true);
-          
-          // Track user presence
-          await newChannel.track({ 
-            online_at: new Date().toISOString(),
-            username: username,
-            avatar: null, // Add avatar URL if available
-          });
+        socket.on('user_left', (payload: { username?: string }) => {
+          if (payload?.username) {
+            toast.info(`${payload.username} left the room`);
+          }
+        });
 
-          // Broadcast join event
-          await newChannel.send({
-            type: 'broadcast',
-            event: 'USER_JOINED',
-            payload: { username, roomId }
-          });
+        socket.connect();
+        await waitForConnection(socket);
 
-          console.log('Successfully joined room:', roomName);
+        const response = await emitJoin(socket, roomId);
+
+        if (!response.ok) {
+          throw new Error(response.error ?? 'Failed to join the room');
         }
-      });
 
-      // Update state
-      setChannel(newChannel);
-      setCurrentRoom({ id: roomId, name: roomName, code: '' });
-      
-    } catch (error) {
-      console.error('Error joining room:', error);
-      throw error;
-    }
-  };
+        if (response.state) {
+          applySnapshot(response.state);
+        }
 
-  const leaveRoom = async () => {
-    if (channel && currentRoom) {
-      try {
-        // Broadcast leave event
-        await channel.send({
-          type: 'broadcast',
-          event: 'USER_LEFT',
-          payload: { username: username, roomId: currentRoom.id }
-        });
-
-        await channel.unsubscribe();
-
-        // Reset state
-        setChannel(null);
-        setCurrentRoom(null);
-        setParticipants([]);
-        setIsConnected(false);
-
-        toast.success('Left room successfully');
+        joinedRoomRef.current = {
+          id: roomId,
+          name: response.state?.room.name ?? roomName,
+        };
+        hasJoinedRef.current = true;
+        setIsConnected(true);
+        setCurrentRoom(
+          response.state?.room ?? {
+            id: roomId,
+            name: roomName,
+            code: '',
+            mode: '',
+            mondeOption: '',
+            hostId: '',
+          }
+        );
       } catch (error) {
-        console.error('Error leaving room:', error);
-        toast.error("Error leaving room!")
+        cleanupSocket();
+        throw error;
       }
+    },
+    [applySnapshot, cleanupSocket, mergeMessage, rejoinRoom]
+  );
+
+  const leaveRoom = useCallback(async () => {
+    const socket = socketRef.current;
+
+    if (socket) {
+      socket.emit('leave_room');
     }
-  };
+
+    cleanupSocket();
+    toast.success('Left room successfully');
+  }, [cleanupSocket]);
 
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!channel || !isConnected) return
-  
-      const message: ChatMessage = {
-        id: crypto.randomUUID(),
-        content,
-        user: { name: username! },
+      const socket = socketRef.current;
+      const room = joinedRoomRef.current;
+      const trimmed = content.trim();
+
+      if (!socket || !socket.connected || !room || !trimmed) return;
+
+      const clientId =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+      const optimistic: ClientChatMessage = {
+        id: `local-${clientId}`,
+        roomId: room.id,
+        userId: session?.user.id ?? 'pending',
+        content: trimmed,
+        user: { name: usernameRef.current ?? 'You' },
         createdAt: new Date().toISOString(),
-      }
-  
-      setMessages((current) => [...current, message])
-  
-      await channel.send({
-        type: 'broadcast',
-        event: 'NEW_MESSAGE',
-        payload: message,   
-      })
+        clientId,
+        status: 'sending',
+      };
+
+      setMessages((prev) => [...prev, optimistic]);
+      socket.emit('typing_stop');
+
+      socket
+        .timeout(10000)
+        .emit(
+          'send_message',
+          { content: trimmed, clientId },
+          (error: Error | null, response: SendMessageResponse) => {
+            if (error || !response?.ok) {
+              setMessages((prev) =>
+                prev.map((message) =>
+                  message.clientId === clientId
+                    ? { ...message, status: 'failed' }
+                    : message
+                )
+              );
+              toast.error(response?.error ?? 'Message failed to send');
+              return;
+            }
+
+            if (response.message) {
+              mergeMessage(response.message);
+            }
+          }
+        );
     },
-    [channel, isConnected, username]
-  )
+    [mergeMessage, session?.user?.id]
+  );
 
-  const startRace = useCallback(async (startRace:boolean)=>{
-    if (startRace) {
-      // Generate a 25-word text for the race and broadcast it so everyone has the same text
-      const words = ['the','and','you','that','was','for','are','with','his','they','have','this','will','your','from','can','had','her','would','make','like','time','very','when','come','may','way','work','life','only','over','think','also','back','after','use','two','how','our','first','well','even','new','want','any','these','give','day','most','us']
-      const selected: string[] = []
-      for (let i = 0; i < 25; i++) {
-        const idx = Math.floor(Math.random() * words.length)
-        selected.push(words[idx])
+  const retryMessage = useCallback(
+    async (message: ClientChatMessage) => {
+      if (message.status !== 'failed') return;
+
+      setMessages((prev) => prev.filter((item) => item.id !== message.id));
+      await sendMessage(message.content);
+    },
+    [sendMessage]
+  );
+
+  const startRace = useCallback(
+    async (start: boolean) => {
+      const socket = socketRef.current;
+
+      if (!start || !socket || !socket.connected) return;
+
+      const words = [
+        'the', 'and', 'you', 'that', 'was', 'for', 'are', 'with', 'his', 'they',
+        'have', 'this', 'will', 'your', 'from', 'can', 'had', 'her', 'would', 'make',
+        'like', 'time', 'very', 'when', 'come', 'may', 'way', 'work', 'life', 'only',
+        'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'first',
+        'well', 'even', 'new', 'want', 'any', 'these', 'give', 'day', 'most', 'us',
+      ];
+      const selected: string[] = [];
+      const requestedCount = Number(
+        (currentRoom?.mondeOption ?? '').match(/\d+/)?.[0] ?? 25
+      );
+      const wordCount = requestedCount === 10 || requestedCount === 50 ? requestedCount : 25;
+
+      for (let i = 0; i < wordCount; i++) {
+        const index = Math.floor(Math.random() * words.length);
+        selected.push(words[index]);
       }
-      const text = selected.join(' ')
 
-      setRaceText(text)
-      setProgressByUser({})
-      setFinishedAtByUser({})
-
-      await channel?.send({
-        type:'broadcast',
-        event:'START_RACE',
-        payload: { text, startedBy: username }
-      })
-    }
-    setIsStartRace(true)
-  },[channel, username])
+      socket.emit('start_race', { text: selected.join(' ') });
+    },
+    [currentRoom?.mondeOption]
+  );
 
   const resetRace = useCallback(async () => {
-    setIsStartRace(false)
-    setRaceText(null)
-    setProgressByUser({})
-    setFinishedAtByUser({})
-    console.log('[Realtime] Sending RESET_RACE')
-    await channel?.send({
-      type: 'broadcast',
-      event: 'RESET_RACE',
-      payload: { resetBy: username }
-    })
-  }, [channel, username])
+    const socket = socketRef.current;
 
-  const sendProgress = useCallback((progress: number) => {
-    if (!isConnected || !username) return
-    // Update own progress locally so the UI reflects immediately
-    setProgressByUser(prev => ({ ...prev, [username]: Math.max(0, Math.min(100, progress)) }))
+    if (!socket || !socket.connected) return;
 
-    let finishedAt: number | undefined
-    if (progress >= 100) {
-      setFinishedAtByUser(prev => {
-        const existing = prev[username]
-        finishedAt = existing ?? Date.now()
-        return { ...prev, [username]: finishedAt! }
-      })
-    }
+    socket.emit('reset_race');
+  }, []);
 
-    // Fire-and-forget broadcast (note: many providers don't echo to sender)
-    channel?.send({
-      type: 'broadcast',
-      event: 'RACE_PROGRESS',
-      payload: { username, progress, finishedAt }
-    })
-  }, [channel, isConnected, username])
-  
+  const sendProgress = useCallback(
+    (progress: number) => {
+      const socket = socketRef.current;
+      const userId = session?.user.id;
+
+      if (!socket || !socket.connected) return;
+
+      const clamped = Math.max(0, Math.min(100, Math.round(progress)));
+
+      if (userId) {
+        setProgressByUser((prev) => ({ ...prev, [userId]: clamped }));
+      }
+      socket.emit('race_progress', { progress: clamped });
+    },
+    [session?.user?.id]
+  );
+
+  const startTyping = useCallback(() => {
+    socketRef.current?.emit('typing_start');
+  }, []);
+
+  const stopTyping = useCallback(() => {
+    socketRef.current?.emit('typing_stop');
+  }, []);
+
+  useEffect(() => {
+    if (!currentRoom) return;
+
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    const heartbeat = window.setInterval(() => {
+      if (socket.connected) {
+        socket.emit('heartbeat');
+      }
+    }, 20000);
+
+    const handleVisibility = () => {
+      if (socket.connected) {
+        socket.emit('set_away', { away: document.hidden });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    handleVisibility();
+
+    return () => {
+      window.clearInterval(heartbeat);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [currentRoom]);
 
   const value: RoomContextType = {
     currentRoom,
@@ -332,6 +649,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     joinRoom,
     leaveRoom,
     sendMessage,
+    retryMessage,
     messages,
     startRace,
     resetRace,
@@ -340,13 +658,11 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     raceText,
     progressByUser,
     finishedAtByUser,
-    sendProgress
-    
+    sendProgress,
+    startTyping,
+    stopTyping,
+    typingUsers,
   };
 
-  return (
-    <RoomContext.Provider value={value}>
-      {children}
-    </RoomContext.Provider>
-  );
+  return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
 };

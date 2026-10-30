@@ -1,29 +1,75 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useRoom } from '@/context/roomContext';
-import { useSession } from 'next-auth/react';
+import React, { useState, useEffect, useRef } from "react";
+import { useRoom } from "@/context/roomContext";
+import { useSession } from "next-auth/react";
+
+const TYPING_IDLE_MS = 1500;
 
 const ChatBox = () => {
-  const { currentRoom, messages, sendMessage, isConnected } = useRoom();
-  const [messageInput, setMessageInput] = useState('');
+  const {
+    currentRoom,
+    messages,
+    sendMessage,
+    retryMessage,
+    isConnected,
+    typingUsers,
+    startTyping,
+    stopTyping,
+  } = useRoom();
+  const [messageInput, setMessageInput] = useState("");
   const { data: session } = useSession();
   const currentUserName = session?.user?.name;
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (messageInput.trim() && isConnected) {
-      sendMessage(messageInput.trim());
-      setMessageInput('');
+  const clearTypingTimer = () => {
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = null;
     }
   };
 
-  // Auto scroll to bottom on new message
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const content = messageInput.trim();
+    if (!content || !isConnected) return;
+
+    clearTypingTimer();
+    stopTyping();
+    setMessageInput("");
+    void sendMessage(content);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setMessageInput(value);
+
+    clearTypingTimer();
+
+    if (!value.trim()) {
+      stopTyping();
+      return;
+    }
+
+    startTyping();
+    typingTimerRef.current = setTimeout(() => {
+      stopTyping();
+    }, TYPING_IDLE_MS);
+  };
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, typingUsers]);
+
+  useEffect(() => {
+    return () => {
+      clearTypingTimer();
+      stopTyping();
+    };
+  }, [stopTyping]);
 
   if (!currentRoom) {
     return (
@@ -33,9 +79,17 @@ const ChatBox = () => {
     );
   }
 
+  const typingLabel =
+    typingUsers.length === 0
+      ? null
+      : typingUsers.length === 1
+        ? `${typingUsers[0]} is typing...`
+        : typingUsers.length === 2
+          ? `${typingUsers[0]} and ${typingUsers[1]} are typing...`
+          : `${typingUsers.length} people are typing...`;
+
   return (
     <div className="bg-gray-900 rounded-lg p-4 h-[500px] flex flex-col w-full  ">
-      {/* Messages */}
       <div
         className="flex-1 overflow-y-auto p-4 mb-4 [&::-webkit-scrollbar]:w-1
   [&::-webkit-scrollbar-track]:rounded-full
@@ -46,20 +100,21 @@ const ChatBox = () => {
         {messages.map((msg) => {
           const isOwnMessage = msg.user.name === currentUserName;
           const time = new Date(msg.createdAt).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
+            hour: "2-digit",
+            minute: "2-digit",
           });
 
           return (
             <div
               key={msg.id}
-              className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}
+              className={`flex flex-col ${isOwnMessage ? "items-end" : "items-start"}`}
             >
               <div
                 className={`max-w-xs px-3 py-2 rounded-lg text-sm shadow 
-                  ${isOwnMessage
-                    ? 'bg-purple-600 text-white rounded-br-none'
-                    : 'bg-gray-800 text-gray-100 rounded-bl-none'
+                  ${
+                    isOwnMessage
+                      ? "bg-purple-600 text-white rounded-br-none"
+                      : "bg-gray-800 text-gray-100 rounded-bl-none"
                   }`}
               >
                 {!isOwnMessage && (
@@ -70,10 +125,21 @@ const ChatBox = () => {
                 {msg.content}
               </div>
               <span
-                className={`text-xs text-gray-400 mt-1 ${isOwnMessage ? 'text-right' : 'text-left'
-                  }`}
+                className={`text-xs text-gray-400 mt-1 ${
+                  isOwnMessage ? "text-right" : "text-left"
+                }`}
               >
                 {time}
+                {isOwnMessage && msg.status === "sending" && " - sending..."}
+                {isOwnMessage && msg.status === "failed" && (
+                  <button
+                    type="button"
+                    onClick={() => void retryMessage(msg)}
+                    className="ml-2 text-red-400 hover:text-red-300 underline"
+                  >
+                    failed, retry
+                  </button>
+                )}
               </span>
             </div>
           );
@@ -81,12 +147,18 @@ const ChatBox = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSendMessage} className="flex flex-wrap sm:flex-nowrap gap-2">
+      {typingLabel && (
+        <p className="px-1 pb-2 text-xs text-purple-400">{typingLabel}</p>
+      )}
+
+      <form
+        onSubmit={handleSendMessage}
+        className="flex flex-wrap sm:flex-nowrap gap-2"
+      >
         <input
           type="text"
           value={messageInput}
-          onChange={(e) => setMessageInput(e.target.value)}
+          onChange={handleInputChange}
           placeholder="Type a message..."
           className="flex-1 bg-gray-800 text-white px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           disabled={!isConnected}
@@ -101,7 +173,7 @@ const ChatBox = () => {
       </form>
 
       <div className="text-xs text-gray-500 mt-2">
-        {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+        {isConnected ? "Connected" : "Reconnecting..."}
       </div>
     </div>
   );

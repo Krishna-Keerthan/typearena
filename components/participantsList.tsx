@@ -51,12 +51,26 @@ const ParticipantsList = () => {
           let hash = 0
           for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0
           const color = colors[hash % colors.length]
+          const statusColor =
+            participant.status === "away" ? "bg-amber-400" : "bg-green-400"
+          const statusLabel =
+            participant.status === "away" ? "away" : "online"
+
           return (
             <div key={participant.id} className="flex items-center space-x-3">
-              <Avatar className="size-8">
-                <AvatarFallback className={`${color} text-white font-semibold`}>{letter}</AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="size-8">
+                  <AvatarFallback className={`${color} text-white font-semibold`}>{letter}</AvatarFallback>
+                </Avatar>
+                <span
+                  className={`absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-gray-900 ${statusColor}`}
+                  title={statusLabel}
+                />
+              </div>
               <span className="text-gray-300">{participant.username}</span>
+              {participant.status === "away" && (
+                <span className="text-xs text-amber-400">away</span>
+              )}
             </div>
           )
         })}

@@ -1,4 +1,4 @@
-"use server"
+﻿"use server"
 
 import { authOptions } from "@/lib/nextauth-options"
 import prisma from "@/lib/prisma"
@@ -8,7 +8,7 @@ import { getServerSession } from "next-auth"
 import { revalidatePath } from "next/cache"
 
 export async function createRoom(roomData: RoomData) {
-    const session = getServerSession(authOptions)
+    const session = await getServerSession(authOptions)
 
     if (!session) {
         return { success: false, data: { code: null } }
@@ -23,19 +23,19 @@ export async function createRoom(roomData: RoomData) {
                 mode: roomData.gameMode,
                 name: roomData.roomName,
                 mondeOption: roomData.wordCount,
-                hostId: roomData.hostId
+                hostId: session.user.id
             }
         })
         revalidatePath('/multiplayer')
         return { success: true, data: room }
-    } catch (error) {
+    } catch {
         console.error("Failed to create the room")
     }
 }
 
 
 export async function getRoomByCode(code: string) {
-    const session = getServerSession(authOptions)
+    const session = await getServerSession(authOptions)
 
     if (!session) {
         return { success: false, data: null }
@@ -63,14 +63,23 @@ export async function getRoomByCode(code: string) {
 
 
 export async function deleteRoomByCode(roomcode:string){
-    const session = getServerSession(authOptions)
+    const session = await getServerSession(authOptions)
 
-    if (!session) {
+    if (!session?.user?.id) {
         return { success: false, data: null }
     }
 
     try {
-        const room = await prisma.room.delete({
+        const room = await prisma.room.findUnique({
+            where: { code: roomcode },
+            select: { hostId: true },
+        })
+
+        if (!room || room.hostId !== session.user.id) {
+            return { success: false, message: "Only the host can delete this room" }
+        }
+
+        await prisma.room.delete({
             where:{code:roomcode}
         })
         return {success:true, message:"Room deleted"}
